@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 type Result = {
   status: string;
@@ -9,15 +10,100 @@ type Result = {
   meta: any;
 };
 
-
-const API: string = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Base API URL (configure via .env.local: NEXT_PUBLIC_API_URL=http://localhost:8000)
+const API_RAW = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API = API_RAW.replace(/\/+$/, ""); // strip trailing slash(es)
 
 function resolveSrc(p: string | undefined | null): string {
   if (!p) return "";
   if (p.startsWith("http://") || p.startsWith("https://")) return p;
-  // ensure exactly one slash between host and path
   const path = p.startsWith("/") ? p : `/${p}`;
   return `${API}${path}`;
+}
+
+/* ---------- Image lightbox with zoom + pan ---------- */
+function ImageLightbox({
+  src,
+  alt,
+  onClose,
+}: {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-w-[90vw] max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <TransformWrapper>
+          <TransformComponent>
+            <img
+              src={src}
+              alt={alt}
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl"
+            />
+          </TransformComponent>
+        </TransformWrapper>
+        <div className="mt-2 flex gap-3 justify-end">
+          <button className="btn" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ZoomableThumb({ src, alt }: { src: string; alt: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-auto rounded-xl border border-neutral-800 cursor-zoom-in"
+        onClick={() => setOpen(true)}
+      />
+      {open && <ImageLightbox src={src} alt={alt} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+/* ---------- Simple resizable video (slider) ---------- */
+function ResizableVideo({ src }: { src: string }) {
+  const [w, setW] = useState(800); // px
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <input
+          type="range"
+          min={360}
+          max={1920}
+          value={w}
+          onChange={(e) => setW(parseInt(e.target.value, 10))}
+          className="w-full"
+        />
+        <span className="text-sm w-16 text-right">{w}px</span>
+        <button className="btn" onClick={() => setW(800)}>Fit</button>
+        <button className="btn" onClick={() => setW(Math.round(w * 1.25))}>+25%</button>
+        <button className="btn" onClick={() => setW(Math.round(w * 0.8))}>-20%</button>
+      </div>
+      <video
+        controls
+        preload="metadata"
+        style={{ width: w, height: "auto" }}
+        className="rounded-xl border border-neutral-800"
+        crossOrigin="anonymous"
+      >
+        <source src={src} type="video/mp4" />
+      </video>
+    </div>
+  );
 }
 
 export default function ResultsPage({ params }: { params: { jobId: string } }) {
@@ -28,11 +114,11 @@ export default function ResultsPage({ params }: { params: { jobId: string } }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`http://localhost:8000/results/${jobId}`);
+        const res = await fetch(`${API}/results/${jobId}`);
         if (!res.ok) throw new Error(await res.text());
         const d: Result = await res.json();
         setData(d);
-      } catch (err:any) {
+      } catch (err: any) {
         setError(err.message || "Failed to load");
       }
     }
@@ -52,47 +138,30 @@ export default function ResultsPage({ params }: { params: { jobId: string } }) {
       <section className="card">
         <h3 className="text-lg font-medium mb-3">Plots</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-  {data.plots.map((p, i) => {
-    const url = resolveSrc(p);
-    return p.toLowerCase().endsWith(".tif") || p.toLowerCase().endsWith(".tiff") ? (
-      <a key={i} href={url} target="_blank" rel="noreferrer" className="btn">
-        Download TIFF ({p.split("/").pop()})
-      </a>
-    ) : (
-      <img key={i} src={url} alt={`plot-${i}`} className="rounded-xl border border-neutral-800" />
-    );
-  })}
-</div>
+          {data.plots.map((p, i) => {
+            const url = resolveSrc(p);
+            if (!url) return null;
+            const isTiff =
+              p.toLowerCase().endsWith(".tif") || p.toLowerCase().endsWith(".tiff");
+            return isTiff ? (
+              <a key={i} href={url} target="_blank" rel="noreferrer" className="btn">
+                Download TIFF ({p.split("/").pop()})
+              </a>
+            ) : (
+              <ZoomableThumb key={i} src={url} alt={`plot-${i}`} />
+            );
+          })}
         </div>
       </section>
 
       <section className="card">
         <h3 className="text-lg font-medium mb-3">Videos</h3>
         <div className="grid gap-4">
-          {data.videos.map((v, i) => (
-  <div key={i} className="space-y-2">
-    <video
-      controls
-      preload="metadata"
-      className="w-full rounded-xl border border-neutral-800"
-      crossOrigin="anonymous"
-    >
-      <source src={`http://localhost:8000/${v}`} type="video/mp4" />
-      {/* Fallback text */}
-      Your browser does not support HTML5 video.
-    </video>
-    {/* Quick open-in-new-tab link for debugging */}
-    <a
-      className="text-sm underline text-neutral-400"
-      href={`http://localhost:8000${v}`}
-      target="_blank"
-      rel="noreferrer"
-    >
-      Open video directly
-    </a>
-  </div>
-))}
+          {data.videos.map((v, i) => {
+            const url = resolveSrc(v);
+            if (!url) return null;
+            return <ResizableVideo key={i} src={url} />;
+          })}
         </div>
       </section>
 
