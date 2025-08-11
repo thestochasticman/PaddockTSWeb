@@ -2,9 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-body { @apply bg-neutral-950 text-neutral-100; }
+/* --- Theme (Black / Red / Green) --- */
+:root {
+  /* base */
+  --bg: #0a0a0a;
+  --card: #111214;
+  --text: #e6e6e6;
+  --muted: #9ca3af;
+  --border: #222428;
+
+  /* accents */
+  --red: #ef4444;    /* tailwind red-500 */
+  --red-600: #dc2626;
+  --green: #22c55e;  /* tailwind green-500 */
+  --green-600: #16a34a;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Layout helpers */
 .container { @apply max-w-6xl mx-auto px-4; }
-.card { @apply bg-neutral-900 rounded-2xl shadow p-6 border border-neutral-800; }
-.btn { @apply rounded-xl px-4 py-2 bg-white/10 hover:bg-white/20 transition; }
-.input { @apply w-full rounded-xl bg-neutral-800 border border-neutral-700 px-3 py-2 outline-none; }
-.label { @apply text-sm text-neutral-300; }
+.card { @apply rounded-2xl shadow p-6 border; border-color: var(--border); background: var(--card); }
+
+/* Buttons */
+.btn { @apply rounded-xl px-4 py-2 font-medium transition; border: 1px solid transparent; }
+.btn-outline { background: transparent; border-color: var(--border); }
+.btn-red { background: var(--red); }
+.btn-red:hover { background: var(--red-600); }
+.btn-green { background: var(--green); }
+.btn-green:hover { background: var(--green-600); }
+
+/* Inputs */
+.input { @apply w-full rounded-xl px-3 py-2 outline-none border; border-color: var(--border); background: #0f1012; }
+.input:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 35%, transparent); }
+
+/* Links */
+.link { color: var(--green); }
+.link:hover { color: var(--green-600); }
+
+/* Badges / chips */
+.badge { @apply text-xs px-2 py-1 rounded-full border; border-color: var(--border); background: #0d0e10; }
+.badge-red { background: color-mix(in srgb, var(--red) 15%, transparent); border-color: color-mix(in srgb, var(--red) 40%, black); }
+.badge-green { background: color-mix(in srgb, var(--green) 15%, transparent); border-color: color-mix(in srgb, var(--green) 40%, black); }
+
+/* Utility for fancy headings */
+.gradient-title {
+  @apply font-semibold;
+  background: linear-gradient(90deg, var(--red), #f43f5e 35%, var(--green));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
