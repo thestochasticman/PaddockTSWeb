@@ -17,4 +17,3 @@ def get_stub_job_id(stub: str, path_stub_job_id_mapping: str):
             mapping[stub] = job_id
             dump(mapping, open(path_stub_job_id_mapping, 'w+'), indent=2)
             return job_id
-

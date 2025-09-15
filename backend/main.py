@@ -32,7 +32,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 PATH_STUB_MAPPING = STATIC_DIR / '.json'
@@ -70,8 +69,8 @@ def run_job(q: Query):
         tmp_dir=str(STATIC_DIR),
         out_dir=str(STATIC_DIR)
     )
-    # get_outputs(q2)
-    plot(q2)
+    get_outputs(q2)
+    # plot(q2)
     return RunResponse(job_id=job_id)
 
 @app.get("/results/{job_id}", response_model=ResultResponse)
