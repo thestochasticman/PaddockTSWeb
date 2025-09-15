@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: paddock-backend
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./data:/app/static          # persist generated artifacts/results
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api   # client talks to same origin via /api
+    container_name: paddock-frontend
+    environment:
+      NODE_ENV: production
+    restart: always
+
+  caddy:
+    image: caddy:2
+    container_name: paddock-caddy
+    depends_on: [frontend, backend]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: http://130.56.246.157   # e.g., app.example.com
+    restart: always
+
+volumes:
+  caddy_data:
+  caddy_config:

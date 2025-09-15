@@ -1,0 +1,21 @@
+services:
+  backend:
+    command: uvicorn main:app --host 0.0.0.0 --port 3200 --reload
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/static
+
+  frontend:
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3200
+    volumes:
+      - ./frontend:/app
+
+  # no TLS or proxy needed locally
+  caddy:
+    profiles: ["off"]   # disable caddy in dev

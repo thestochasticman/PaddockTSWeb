@@ -1,0 +1,24 @@
+# Interpolates DOMAIN from the environment
+{$DOMAIN} {
+  encode zstd gzip
+
+  # Proxy API under the same origin
+  @api path /api/*
+  handle @api {
+    handle_path /api/* {
+      reverse_proxy backend:3200
+    }
+  }
+
+  # Everything else to Next.js
+  handle {
+    reverse_proxy frontend:3000
+  }
+
+  # Simple hardening
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+  }
+}
