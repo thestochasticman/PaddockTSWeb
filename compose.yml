@@ -1,13 +1,17 @@
 services:
   backend:
+    ports:
+      - "8000:3200"  
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: paddock-backend
     environment:
       PYTHONUNBUFFERED: "1"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
     volumes:
       - ./data:/app/static          # persist generated artifacts/results
+
     restart: always
 
   frontend:
