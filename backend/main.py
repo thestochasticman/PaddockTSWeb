@@ -22,7 +22,9 @@ from utils import get_stub_job_id
 from PaddockTS.Plotting.checkpoint_plots import plot
 from functools import partial
 
+print('App is running')
 app = FastAPI(title="Geo Viz API", version="0.2.0")
+
 
 app.add_middleware(
     CORSMiddleware,

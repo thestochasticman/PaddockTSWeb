@@ -1,25 +1,23 @@
-# syntax=docker/dockerfile:1.6
-FROM mambaorg/micromamba:1.5.8 AS build
+FROM continuumio/miniconda3:latest
 SHELL ["bash","-lc"]
 
-# speed + ensure git exists during env creation
-ENV MAMBA_NO_BANNER=1 MAMBA_DOWNLOAD_THREADS=8 MAMBA_EXTRACT_THREADS=8
-RUN micromamba install -y -n base -c conda-forge git ca-certificates \
- && micromamba clean --all --yes
+# OS deps for VCS + TLS
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 
+# build the env
 COPY backend/env.yml /tmp/env.yml
+RUN conda env create -f /tmp/env.yml && conda clean -afy
 
-# cache conda pkgs so subsequent builds are fast
-RUN --mount=type=cache,target=/opt/conda/pkgs \
-    micromamba create -y -n app -f /tmp/env.yml \
- && micromamba run -n app git --version \
- && micromamba run -n app python -m pip --version
+# put the env on PATH and verify with the env's python
+ENV PATH=/opt/conda/envs/PaddockTSEnv/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    MPLBACKEND=Agg
 
-FROM mambaorg/micromamba:1.5.8
-SHELL ["bash","-lc"]
+RUN /opt/conda/envs/PaddockTSEnv/bin/python -c "import uvicorn, fastapi; print('runtime ok')"
+
 WORKDIR /app
-COPY --from=build /opt/conda/envs/app /opt/conda/envs/app
-ENV PATH=/opt/conda/envs/app/bin:$PATH
 COPY backend/ /app/
+
 EXPOSE 3200
-CMD ["uvicorn","main:app","--host","0.0.0.0","--port","3200"]
+# run uvicorn from the env, not from base
+CMD ["/opt/conda/envs/PaddockTSEnv/bin/uvicorn","main:app","--host","0.0.0.0","--port","3200"]
