@@ -17,7 +17,7 @@ export default function HomePage() {
   const [endDate, setEndDate] = useState("2020-06-01");
   const [collections, setCollections] = useState("ga_s2am_ard_3,ga_s2bm_ard_3");
   const [bands, setBands] = useState("nbart_blue,nbart_green,nbart_red,nbart_red_edge_1,nbart_red_edge_2,nbart_red_edge_3,nbart_nir_1,nbart_nir_2,nbart_swir_2,nbart_swir_3");
-  const [filterExpr, setFilterExpr] = useState("eo:cloud_cover < 10");
+  // const [filterExpr, setFilterExpr] = useState("eo:cloud_cover < 10");
   const [stub, setStub] = useState(""); // optional
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export default function HomePage() {
         end_time: endDate,
         collections: splitCSV(collections),
         bands: splitCSV(bands),
-        filter: filterExpr || null,
+        // filter: filterExpr || null,
       };
       if (stub.trim()) body.stub = stub.trim();
 
@@ -89,8 +89,8 @@ export default function HomePage() {
             <input className="input" value={bands} onChange={e=>setBands(e.target.value)} />
           </div>
           <div>
-            <label className="label">Filter (expr)</label>
-            <input className="input" value={filterExpr} onChange={e=>setFilterExpr(e.target.value)} placeholder="eo:cloud_cover < 10" />
+            {/* <label className="label">Filter (expr)</label> */}
+            {/* <input className="input" value={filterExpr} onChange={e=>setFilterExpr(e.target.value)} placeholder="eo:cloud_cover < 10" /> */}
           </div>
           <div>
             <label className="label">Stub (optional)</label>

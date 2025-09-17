@@ -20,6 +20,9 @@ from PaddockTS.query import Query
 from PaddockTS.get_outputs import get_outputs
 from utils import get_stub_job_id
 from PaddockTS.Plotting.checkpoint_plots import plot
+from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
+from PaddockTS.IndicesAndVegFrac.add_indices_and_veg_frac import add_indices_and_veg_frac
+from PaddockTS.PaddockTS.get_paddock_ts import get_paddock_ts
 from functools import partial
 
 print('App is running')
@@ -28,7 +31,7 @@ app = FastAPI(title="Geo Viz API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000",  "http://127.0.0.1:3000",],
+    allow_origins=["http://localhost:3000",  "http://127.0.0.1:3000", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,8 +74,12 @@ def run_job(q: Query):
         tmp_dir=str(STATIC_DIR),
         out_dir=str(STATIC_DIR)
     )
-    get_outputs(q2)
-    # plot(q2)
+
+    # get_outputs(q2)
+    get_paddocks(q2)
+    get_paddock_ts(q2)
+    add_indices_and_veg_frac(q2)
+    plot(q2)
     return RunResponse(job_id=job_id)
 
 @app.get("/results/{job_id}", response_model=ResultResponse)
@@ -85,13 +92,13 @@ def get_results(job_id: str):
 
 
     plots = [
-        f"static/{job_id}/checkpoints/2_paddock_map_auto_fourier.png",
-        f"static/{job_id}/checkpoints/2_paddock_map_auto_rgb.png",
+        f"static/{job_id}/checkpoints/{job_id}_paddock_map_auto_fourier.png",
+        f"static/{job_id}/checkpoints/{job_id}_paddock_map_auto_rgb.png",
     ]
     videos = [
         # "https://samplelib.com/lib/preview/mp4/sample-5s.mp4"
-        f"static/{job_id}/checkpoints/2_manpad_RGB.mp4",
-        f"static/{job_id}/checkpoints/2_manpad_vegfrac.mp4",
+        f"static/{job_id}/checkpoints/{job_id}_manpad_RGB.mp4",
+        f"static/{job_id}/checkpoints/{job_id}_manpad_vegfrac.mp4",
     ]
 
     meta_path = job_dir / "meta.json"
