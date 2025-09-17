@@ -11,7 +11,8 @@ type Result = {
 };
 
 // Base API URL (configure via .env.local: NEXT_PUBLIC_API_URL=http://localhost:8000)
-const API_RAW = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// const API_RAW = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_RAW = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 const API = API_RAW.replace(/\/+$/, ""); // strip trailing slash(es)
 
 function resolveSrc(p: string | undefined | null): string {

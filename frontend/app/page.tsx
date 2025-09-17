@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+const BASE = (process.env.NEXT_PUBLIC_API_URL || "/api").replace(/\/+$/, "");
 
 function splitCSV(s: string): string[] {
   return s.split(",").map(v => v.trim()).filter(Boolean);
@@ -32,11 +33,12 @@ export default function HomePage() {
         end_time: endDate,
         collections: splitCSV(collections),
         bands: splitCSV(bands),
-        filter_expr: filterExpr || null,
+        filter: filterExpr || null,
       };
       if (stub.trim()) body.stub = stub.trim();
 
-      const res = await fetch("http://localhost:8000/run", {
+      // const res = await fetch("http://localhost:8000/run", {
+      const res = await fetch(`${BASE}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
