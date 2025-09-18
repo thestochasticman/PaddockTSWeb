@@ -17,6 +17,8 @@ backend/static/*
 backend/stub_map.json
 backend/*.log
 
+node_modules/
+
 # OS/editor
 .DS_Store
 .env
@@ -25,3 +27,5 @@ backend/*.log
 .idea/
 .vscode/
 EOF
+
+data/*
