@@ -39,7 +39,14 @@ services:
     environment:
       DOMAIN: http://130.56.246.157   # e.g., app.example.com
     restart: always
+    networks:
+      - default
+      - edge
 
 volumes:
   caddy_data:
   caddy_config:
+
+networks:
+  edge:
+    external: true
