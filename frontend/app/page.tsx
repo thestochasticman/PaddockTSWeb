@@ -105,7 +105,7 @@ export default function HomePage() {
       <section className="card">
         <h2 className="text-xl font-medium mb-2">What this does</h2>
         <p className="text-neutral-300">
-          Sends a <code>Query</code>-shaped payload to FastAPI. The backend computes derived fields in the same way as your dataclass and generates a demo plot.
+          Sends a <code>Query</code>-shaped payload to FastAPI Backend.
         </p>
         <ul className="list-disc ml-6 mt-3 text-neutral-400 text-sm">
           <li>Dates are ISO (YYYY-MM-DD)</li>

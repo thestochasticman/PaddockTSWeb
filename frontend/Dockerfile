@@ -7,7 +7,9 @@ COPY frontend/ ./
 
 # Inject public runtime config at build time
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_BASEPATH
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_BASEPATH=$NEXT_BASEPATH
 
 # Optional: if you add in next.config.js -> module.exports = { output: 'standalone' }
 # you can later copy only .next/standalone

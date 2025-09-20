@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "PaddockTS Web",
@@ -14,8 +15,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="mb-8 flex items-center justify-between">
             <h1 className="text-2xl gradient-title">PaddockTS Web</h1>
             <nav className="space-x-2">
-              <a className="btn btn-red" href="/">Home</a>
-              <a className="btn btn-green" href="/about">About</a>
+              <Link className="btn btn-red" href="/">Home</Link>
+              <Link className="btn btn-green" href="/about">About</Link>
             </nav>
           </header>
           {children}
