@@ -19,7 +19,8 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: /PaddockTS/api   # client talks to same origin via /api
+        NEXT_PUBLIC_API_URL: /PaddockTS/api
+        NEXT_BASEPATH: /PaddockTS
     container_name: paddock-frontend
     environment:
       NODE_ENV: production
