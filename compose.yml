@@ -10,7 +10,7 @@ services:
       PYTHONUNBUFFERED: "1"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
     volumes:
-      - ./data:/app/static          # persist generated artifacts/results
+      - /borevitz_projects/data/PaddockTSWeb/:/app/static          # persist generated artifacts/results
 
     restart: always
 
