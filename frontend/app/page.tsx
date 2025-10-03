@@ -15,8 +15,6 @@ export default function HomePage() {
   const [buffer, setBuffer] = useState(0.01);
   const [startDate, setStartDate] = useState("2020-01-01");
   const [endDate, setEndDate] = useState("2020-06-01");
-  const [collections, setCollections] = useState("ga_s2am_ard_3,ga_s2bm_ard_3");
-  const [bands, setBands] = useState("nbart_blue,nbart_green,nbart_red,nbart_red_edge_1,nbart_red_edge_2,nbart_red_edge_3,nbart_nir_1,nbart_nir_2,nbart_swir_2,nbart_swir_3");
   // const [filterExpr, setFilterExpr] = useState("eo:cloud_cover < 10");
   const [stub, setStub] = useState(""); // optional
   const [loading, setLoading] = useState(false);
@@ -31,9 +29,6 @@ export default function HomePage() {
         lat, lon, buffer,
         start_time: startDate,
         end_time: endDate,
-        collections: splitCSV(collections),
-        bands: splitCSV(bands),
-        // filter: filterExpr || null,
       };
       if (stub.trim()) body.stub = stub.trim();
 
@@ -80,14 +75,7 @@ export default function HomePage() {
               <input className="input" type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} />
             </div>
           </div>
-          <div>
-            <label className="label">Collections (comma-separated)</label>
-            <input className="input" value={collections} onChange={e=>setCollections(e.target.value)} />
-          </div>
-          <div>
-            <label className="label">Bands (comma-separated)</label>
-            <input className="input" value={bands} onChange={e=>setBands(e.target.value)} />
-          </div>
+
           <div>
             {/* <label className="label">Filter (expr)</label> */}
             {/* <input className="input" value={filterExpr} onChange={e=>setFilterExpr(e.target.value)} placeholder="eo:cloud_cover < 10" /> */}
@@ -103,13 +91,12 @@ export default function HomePage() {
         </form>
       </section>
       <section className="card">
-        <h2 className="text-xl font-medium mb-2">What this does</h2>
+        <h2 className="text-xl font-medium mb-2">What is PaddockTS</h2>
         <p className="text-neutral-300">
-          Sends a <code>Query</code>-shaped payload to FastAPI Backend.
+          PaddockTS captures how your paddock changes over time, tracking vegetation, soil, and weather using satellite images and climate data.
         </p>
         <ul className="list-disc ml-6 mt-3 text-neutral-400 text-sm">
           <li>Dates are ISO (YYYY-MM-DD)</li>
-          <li>Collections/Bands are comma-separated lists</li>
           <li>Provide <code>stub</code> or it auto-generates one from a hash</li>
         </ul>
       </section>

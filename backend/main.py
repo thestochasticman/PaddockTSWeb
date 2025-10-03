@@ -60,7 +60,10 @@ class ResultResponse(BaseModel):
 @app.post("/run", response_model=RunResponse)
 def run_job(q: Query):
     # Compute or respect stub
-    job_id = get_stub_job_id(q.stub, PATH_STUB_MAPPING)
+    if q.stub == q.get_stub():
+        job_id = get_stub_job_id(q.stub, PATH_STUB_MAPPING)
+    else:
+        job_id = q.stub
     q2 = Query(
         q.lat,
         q.lon,
