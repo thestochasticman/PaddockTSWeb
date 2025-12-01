@@ -2,11 +2,11 @@
 const target = process.env.API_PROXY_TARGET || 'http://localhost:8000';
 
 const nextConfig = {
-  basePath: '/PaddockTS',
+  basePath: '',
   async rewrites() {
     return [
       // Browser calls /api/...; Next proxies to your FastAPI backend.
-      { source: '/PaddockTS/api/:path*', destination: `${target}/:path*` },
+      { source: '/api/:path*', destination: `${target}/:path*`},
     ];
   },
 };

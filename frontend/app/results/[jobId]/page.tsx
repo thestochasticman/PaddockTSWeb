@@ -1,177 +1,291 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+
+// layout chrome
+import SearchResultsToggle from "../../components/SearchResultsToggle";
+
+// data / types / utilities
+import { API, STORAGE_KEY } from "../../components/API";
+import type { SavedQuery } from "../../components/SavedQuery";
+import type { Selection } from "../../components/Selection";
+import { BboxToVertices } from "../../components/BboxToVertices";
+
+// paddock visual summary component
+import PaddockVisualSummary, {
+  VisualItem,
+} from "../../components/PaddockVisualSummary";
+
+type MediaTriple = [string, number, string]; // [title, aspectRatio, path]
 
 type Result = {
   status: string;
-  plots: string[];
-  videos: string[];
-  meta: any;
+  photos: MediaTriple[];
+  videos: MediaTriple[];
+  meta: Record<string, any>;
 };
 
-// Base API URL (configure via .env.local: NEXT_PUBLIC_API_URL=http://localhost:8000)
-// const API_RAW = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const API_RAW = process.env.NEXT_PUBLIC_API_URL ?? "/api";
-const API = API_RAW.replace(/\/+$/, ""); // strip trailing slash(es)
+// backend meta.bbox is [south, west, north, east]
+type BboxArray = [number, number, number, number];
 
-function resolveSrc(p: string | undefined | null): string {
-  if (!p) return "";
-  if (p.startsWith("http://") || p.startsWith("https://")) return p;
-  const path = p.startsWith("/") ? p : `/${p}`;
-  return `${API}${path}`;
+// ---------- helpers ----------
+
+function selectionFromBboxArray(bbox: BboxArray): Selection {
+  return {
+    south: bbox[0],
+    west: bbox[1],
+    north: bbox[2],
+    east: bbox[3],
+  };
 }
 
-/* ---------- Image lightbox with zoom + pan ---------- */
-function ImageLightbox({
-  src,
-  alt,
-  onClose,
-}: {
-  src: string;
-  alt: string;
-  onClose: () => void;
-}) {
+function bboxArrayFromSelection(sel: Selection): BboxArray {
+  return [sel.south, sel.west, sel.north, sel.east];
+}
+
+function normalizeBbox(raw: any): BboxArray | null {
+  if (!Array.isArray(raw) || raw.length !== 4) return null;
+  const vals = raw.map((x) => Number(x));
+  if (vals.some((x) => Number.isNaN(x) || !Number.isFinite(x))) return null;
+  // round so tiny float differences don't break matching
+  return [
+    Number(vals[0].toFixed(6)),
+    Number(vals[1].toFixed(6)),
+    Number(vals[2].toFixed(6)),
+    Number(vals[3].toFixed(6)),
+  ] as BboxArray;
+}
+
+function bboxEqual(a: BboxArray, b: BboxArray, eps = 1e-5): boolean {
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="max-w-[90vw] max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <TransformWrapper>
-          <TransformComponent>
-            <img
-              src={src}
-              alt={alt}
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl"
-            />
-          </TransformComponent>
-        </TransformWrapper>
-        <div className="mt-2 flex gap-3 justify-end">
-          <button className="btn" onClick={onClose}>
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+    Math.abs(a[0] - b[0]) < eps &&
+    Math.abs(a[1] - b[1]) < eps &&
+    Math.abs(a[2] - b[2]) < eps &&
+    Math.abs(a[3] - b[3]) < eps
   );
 }
 
-function ZoomableThumb({ src, alt }: { src: string; alt: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <img
-        src={src}
-        alt={alt}
-        className="w-full h-auto rounded-xl border border-neutral-800 cursor-zoom-in"
-        onClick={() => setOpen(true)}
-      />
-      {open && <ImageLightbox src={src} alt={alt} onClose={() => setOpen(false)} />}
-    </>
-  );
+function normalizeDateString(v: unknown): string | null {
+  if (!v) return null;
+  const s = String(v);
+  // just keep yyyy-mm-dd
+  return s.length >= 10 ? s.slice(0, 10) : s;
 }
 
-/* ---------- Simple resizable video (slider) ---------- */
-function ResizableVideo({ src }: { src: string }) {
-  const [w, setW] = useState(800); // px
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <input
-          type="range"
-          min={360}
-          max={1920}
-          value={w}
-          onChange={(e) => setW(parseInt(e.target.value, 10))}
-          className="w-full"
-        />
-        <span className="text-sm w-16 text-right">{w}px</span>
-        <button className="btn" onClick={() => setW(800)}>Fit</button>
-        <button className="btn" onClick={() => setW(Math.round(w * 1.25))}>+25%</button>
-        <button className="btn" onClick={() => setW(Math.round(w * 0.8))}>-20%</button>
-      </div>
-      <video
-        controls
-        preload="metadata"
-        style={{ width: w, height: "auto" }}
-        className="rounded-xl border border-neutral-800"
-        crossOrigin="anonymous"
-      >
-        <source src={src} type="video/mp4" />
-      </video>
-    </div>
-  );
+function toAssetUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const clean = path.replace(/^\/+/, "");
+  return `${API}/${clean}`;
 }
+
+// ---------- page ----------
 
 export default function ResultsPage({ params }: { params: { jobId: string } }) {
   const { jobId } = params;
+
   const [data, setData] = useState<Result | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
+
+  // 1) Load saved queries written by MapPanel (READ-ONLY here)
   useEffect(() => {
-    async function fetchData() {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setSavedQueries(parsed as SavedQuery[]);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // 2) Fetch results for this jobId
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchResults() {
       try {
+        setLoading(true);
+        setError(null);
+
         const res = await fetch(`${API}/results/${jobId}`);
-        if (!res.ok) throw new Error(await res.text());
-        const d: Result = await res.json();
-        setData(d);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+
+        const json = (await res.json()) as Result;
+        if (!cancelled) setData(json);
       } catch (err: any) {
-        setError(err.message || "Failed to load");
+        if (!cancelled) {
+          setError(err?.message ?? "Failed to fetch results");
+          setData(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
-    fetchData();
+
+    fetchResults();
+    return () => {
+      cancelled = true;
+    };
   }, [jobId]);
 
-  if (error) return <div className="card"><p className="text-red-400">{error}</p></div>;
-  if (!data) return <div className="card"><p>Loading…</p></div>;
+  // 3) Compute matching saved query (bbox + dates) – read-only
+  let matchedQuery: SavedQuery | undefined;
+  let metaBbox: BboxArray | null = null;
+  let metaStart: string | null = null;
+  let metaEnd: string | null = null;
+
+  if (data) {
+    const meta = data.meta || {};
+    metaBbox = normalizeBbox(meta.bbox);
+    metaStart = normalizeDateString(meta.start_date);
+    metaEnd = normalizeDateString(meta.end_date);
+
+    if (metaBbox && metaStart && metaEnd) {
+      for (const q of savedQueries) {
+        const qStart = normalizeDateString(q.startDate);
+        const qEnd = normalizeDateString(q.endDate);
+        if (qStart !== metaStart || qEnd !== metaEnd) continue;
+
+        const qBboxArr = bboxArrayFromSelection(q.bbox);
+        const qBboxNorm = normalizeBbox(qBboxArr);
+        if (!qBboxNorm) continue;
+        if (!bboxEqual(metaBbox, qBboxNorm)) continue;
+
+        matchedQuery = q;
+        break;
+      }
+    }
+  }
+
+  // ---------- UI states ----------
+
+  if (loading && !data && !error) {
+    return (
+      <div className="fixed inset-0 flex flex-col bg-neutral-950 text-white">
+        <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-xs">
+          <div className="font-semibold text-neutral-400">PaddockTS</div>
+          <SearchResultsToggle />
+        </div>
+        <div className="flex flex-1 min-h-0 items-center justify-center text-xs text-neutral-400">
+          Fetching results…
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="fixed inset-0 flex flex-col bg-neutral-950 text-white">
+        <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-xs">
+          <div className="font-semibold text-neutral-400">PaddockTS</div>
+          <SearchResultsToggle />
+        </div>
+        <div className="flex flex-1 min-h-0 items-center justify-center">
+          <div className="max-w-md text-center space-y-3 text-xs">
+            <h1 className="text-sm font-semibold text-red-400">
+              Result error
+            </h1>
+            <p className="text-neutral-400">
+              {error ?? "No result payload found."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { status, photos, videos, meta } = data;
+
+  const visualItems: VisualItem[] = [
+    ...photos.map(([title, aspect, path], idx) => ({
+      id: `photo-${idx}`,
+      title,
+      type: "image" as const,
+      src: toAssetUrl(path),
+      aspectRatio: aspect,
+    })),
+    ...videos.map(([title, aspect, path], idx) => ({
+      id: `video-${idx}`,
+      title,
+      type: "video" as const,
+      src: toAssetUrl(path),
+      aspectRatio: aspect,
+    })),
+  ];
+
+  const bboxStr =
+    metaBbox && !metaBbox.some((v) => Number.isNaN(v))
+      ? `[${metaBbox.map((v) => v.toString()).join(", ")}]`
+      : "—";
+
+  const periodStr =
+    metaStart || metaEnd ? `${metaStart ?? "?"}  ${metaEnd ?? "?"}` : "—";
+
+  const queryName = matchedQuery?.name ?? "Unnamed query";
 
   return (
-    <main className="space-y-6">
-      <section className="card">
-        <h2 className="text-xl font-medium">Job {jobId}</h2>
-        <p className="text-sm text-neutral-400">Status: {data.status}</p>
-      </section>
+    <div className="fixed inset-0 flex flex-col bg-neutral-950 text-white">
+      {/* Top bar with title + toggle (same as HomePage) */}
+      <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-xs">
+        <div className="font-semibold text-neutral-400">PaddockTS</div>
+        <SearchResultsToggle />
+      </div>
 
-      <section className="card">
-        <h3 className="text-lg font-medium mb-3">Plots</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {data.plots.map((p, i) => {
-            const url = resolveSrc(p);
-            if (!url) return null;
-            const isTiff =
-              p.toLowerCase().endsWith(".tif") || p.toLowerCase().endsWith(".tiff");
-            return isTiff ? (
-              <a key={i} href={url} target="_blank" rel="noreferrer" className="btn">
-                Download TIFF ({p.split("/").pop()})
-              </a>
-            ) : (
-              <ZoomableThumb key={i} src={url} alt={`plot-${i}`} />
-            );
-          })}
+      {/* Main content: single-panel results, minimal & classy */}
+      <div className="flex flex-1 min-h-0">
+        <div className="flex-1 relative">
+          <div className="absolute inset-0 flex flex-col">
+            {/* Minimal header for this result */}
+            <div className="border-b border-neutral-800 px-4 py-3 text-xs flex flex-col gap-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="text-sm font-semibold text-neutral-100 truncate">
+                  {queryName}
+                </div>
+                {/* <span
+                  className={`px-2 py-0.5 rounded-full border text-[10px] ${
+                    status === "done"
+                      ? "border-emerald-500/50 bg-emerald-900/40 text-emerald-200"
+                      : status === "error"
+                      ? "border-red-500/50 bg-red-900/40 text-red-200"
+                      : "border-neutral-600 bg-neutral-900 text-neutral-200"
+                  }`}
+                >
+                  {status}
+                </span> */}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-400">
+                <div>
+                  <span className="uppercase tracking-wide text-neutral-500 mr-1">
+                    Period
+                  </span>
+                  <span className="font-mono">{periodStr}</span>
+                </div>
+                <div>
+                  <span className="uppercase tracking-wide text-neutral-500 mr-1">
+                    BBox [S,W,N,E]
+                  </span>
+                  <span className="font-mono">{bboxStr}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable visual summary */}
+            <div className="flex-1 overflow-auto px-4 py-4">
+              <PaddockVisualSummary items={visualItems} />
+            </div>
+          </div>
         </div>
-      </section>
-
-      <section className="card">
-        <h3 className="text-lg font-medium mb-3">Videos</h3>
-        <div className="grid gap-4">
-          {data.videos.map((v, i) => {
-            const url = resolveSrc(v);
-            if (!url) return null;
-            return <ResizableVideo key={i} src={url} />;
-          })}
-        </div>
-      </section>
-
-      <section className="card">
-        <h3 className="text-lg font-medium mb-2">Meta</h3>
-        <pre className="text-xs whitespace-pre-wrap break-words bg-neutral-950/50 p-4 rounded-xl border border-neutral-800 overflow-x-auto">
-{JSON.stringify(data.meta, null, 2)}
-        </pre>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

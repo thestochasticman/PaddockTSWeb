@@ -1,5 +1,5 @@
 {
-  "name": "geo-viz-frontend",
+  "name": "paddock-ts-web",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,9 +10,14 @@
     "lint": "echo \"(lint disabled in prototype)\""
   },
   "dependencies": {
+    "@vis.gl/react-google-maps": "^1.7.1",
     "next": "^14.2.32",
+    "plotly.js": "^3.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-grid-layout": "^1.5.2",
+    "react-plotly.js": "^2.6.0",
+    "react-resizable": "^3.0.5",
     "react-zoom-pan-pinch": "^3.7.0"
   },
   "devDependencies": {
