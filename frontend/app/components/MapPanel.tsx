@@ -1172,7 +1172,7 @@ export default function MapPanel() {
               <div className="text-[11px] min-h-[1.25rem]">
                 {status === "running" && (
                   <span className="text-yellow-400 animate-pulse">
-                    ⏳ Simulation running…
+                    ⏳ Fetching…
                   </span>
                 )}
                 {status === "done" && (

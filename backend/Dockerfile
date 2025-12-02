@@ -1,24 +1,65 @@
-FROM continuumio/miniconda3:latest
-SHELL ["bash","-lc"]
 
-# OS deps for VCS + TLS
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+# # Use the official miniconda image base
+# FROM continuumio/miniconda3:latest
 
-# build the env
-COPY backend/env.yml /tmp/env.yml
-RUN conda env create -f /tmp/env.yml && conda clean -afy
+# # Ensure the shell runs as a login shell for conda activation to work
+# SHELL ["bash","-lc"]
 
-# put the env on PATH and verify with the env's python
-ENV PATH=/opt/conda/envs/PaddockTSEnv/bin:$PATH \
-    PYTHONUNBUFFERED=1 \
-    MPLBACKEND=Agg
+# # OS dependencies that might not be in your specific host env
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#       git ca-certificates \
+#     && rm -rf /var/lib/apt/lists/*
 
-RUN /opt/conda/envs/PaddockTSEnv/bin/python -c "import uvicorn, fastapi; print('runtime ok')"
+# # Set necessary ENV variables so that Python/Uvicorn behave correctly.
+# # We assume the specific environment 'PaddockTSEnv' exists on your host machine 
+# # inside the mounted directory (/opt/conda/envs/PaddockTSEnv)
+# ENV PYTHONUNBUFFERED=1 \
+#     MPLBACKEND=Agg \
+#     # Add the mounted env's bin path to the overall PATH
+#     PATH=/opt/conda/envs/PaddockTSEnv/bin:/opt/conda/bin:$PATH
+
+# WORKDIR /app
+
+# # Copy backend code into the image
+# COPY backend/ /app/
+
+
+# # The CMD assumes that 'uvicorn' is correctly installed within the PaddockTSEnv 
+# # on your host machine. We call it simply via 'python -m uvicorn' because 
+# # the ENV PATH above makes the environment's python accessible.
+# CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "3200"]
+
+
+
+FROM ubuntu:22.04
+
+# Use bash as the shell
+SHELL ["bash", "-lc"]
+
+# Basic OS deps – adjust as needed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    git \
+    curl \
+    tini \
+  && rm -rf /var/lib/apt/lists/*
+
+# Environment variables
+# - We assume your host Miniconda is mounted at /opt/conda
+# - And that the env PaddockTSEnv already exists there
+ENV PYTHONUNBUFFERED=1 \
+    MPLBACKEND=Agg \
+    PATH=/opt/conda/envs/PaddockTSEnv/bin:/opt/conda/bin:$PATH
+
+# Optional: set locale to avoid some Python / lib issues
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 WORKDIR /app
-COPY backend/ /app/
 
+# Copy backend code into the image
+COPY backend/ /app
 
-EXPOSE 3200
-# run uvicorn from the env, not from base
-CMD ["/opt/conda/envs/PaddockTSEnv/bin/uvicorn","main:app","--host","0.0.0.0","--port","3200"]
+# Default command:
+# relies on /opt/conda/envs/PaddockTSEnv/bin/python from the mounted env
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "3200"]

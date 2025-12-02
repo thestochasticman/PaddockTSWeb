@@ -30,7 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STATIC_DIR = Path('/borevitz_projects/data/')
+STATIC_DIR = Path('/borevitz_projects/data/PaddockTSWeb')
+# STATIC_DIR = Path('PaddockTSWeb')
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 PATH_STUB_MAPPING = STATIC_DIR / '.json'
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -48,8 +49,8 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
         tmp_dir=str(STATIC_DIR),
         out_dir=str(STATIC_DIR)
     )
-    # job_id = get_stub_job_id(q1.get_stub(), PATH_STUB_MAPPING)
-    job_id = '-'.join([str(c) for c in q.bbox] + [str(q.start_date), str(q.end_date)])
+    job_id = get_stub_job_id(q1.get_stub(), PATH_STUB_MAPPING)
+    # job_id = '-'.join([str(c) for c in q.bbox] + [str(q.start_date), str(q.end_date)])
 
     q2 = Query(
         lat,
@@ -71,6 +72,7 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
     with open(meta_path, '+w') as file:
         json.dump(meta, file)
     background_tasks.add_task(get_outputs, q2)
+    # get_outputs(q2)
     return RunResponse(job_id=job_id)
 
 @app.get("/results/{job_id}", response_model=ResultResponse)

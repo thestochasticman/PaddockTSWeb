@@ -13,8 +13,6 @@ chmod +x ./run.sh
 ./run.sh
 ```
 
-<<<<<<< HEAD
-=======
 ## Deployment
 
 ```
@@ -26,4 +24,3 @@ sudo docker compose up backend
 ```
 sudo docker compose down backend
 ```
->>>>>>> 4b318f8fb6ef5e4fc52dfba3202f1ffeb48331ac

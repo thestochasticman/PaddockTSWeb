@@ -1,5 +1,6 @@
 services:
   backend:
+    user: "1001:1001"
     ports:
       - "8000:3200"  
     build:
@@ -9,8 +10,13 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      HDF5_USE_FILE_LOCKING: "FALSE"
+      GDAL_DATA: /opt/conda/envs/PaddockTSEnv/share/gdal
+      PROJ_LIB: /opt/conda/envs/PaddockTSEnv/share/proj
     volumes:
-      - /borevitz_projects/data/PaddockTSWeb/:/app/static          # persist generated artifacts/results
+       - ./backend:/app/backend
+       - /borevitz_projects/data/:/borevitz_projects/data/
+       - /borevitz_projects/dev/tools/miniconda3/:/opt/conda/
 
     restart: always
     networks:
@@ -26,6 +32,7 @@ services:
     container_name: paddock-frontend
     environment:
       NODE_ENV: production
+
     restart: always
     networks:
       - edge
