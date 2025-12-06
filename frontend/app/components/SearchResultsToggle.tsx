@@ -42,12 +42,12 @@ export default function SearchResultsToggle() {
   const hasResult = Boolean(latestJobId);
 
   return (
-    <div className="inline-flex items-center rounded-full bg-neutral-900 border border-neutral-700 p-1 text-[11px]">
+    <div className="inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[11px]">
       <button
         type="button"
         onClick={handleGoSearch}
         className={[
-          "px-3 py-1 rounded-full transition",
+          "px-3 py-1 transition",
           isOnSearch
             ? "bg-cyan-500 text-neutral-950"
             : "text-neutral-300 hover:bg-neutral-800",
@@ -60,7 +60,7 @@ export default function SearchResultsToggle() {
         onClick={handleGoResults}
         disabled={!hasResult}
         className={[
-          "ml-1 px-3 py-1 rounded-full transition",
+          "ml-1 px-3 py-1 transition",
           isOnResults
             ? "bg-cyan-500 text-neutral-950"
             : hasResult

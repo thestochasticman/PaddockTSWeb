@@ -6,5 +6,5 @@ export const API = API_RAW.replace(/\/+$/, ""); // strip trailing slashes
 
 
 export const apiKey = 'AIzaSyCZwvOEVDifgBYVPPWqv5yx6MjZN9-koyQ' 
-export const STORAGE_KEY = "daesim_saved_queries_v1";
-export const LATEST_JOB_STORAGE_KEY = "daesim_latest_job_id";
+export const STORAGE_KEY = "paddock_ts_saved_queries_v1";
+export const LATEST_JOB_STORAGE_KEY = "paddock_ts_latest_job_id";
