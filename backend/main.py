@@ -1,5 +1,7 @@
 from utils.latlon_and_deg_buffer_from_bbox import latlon_and_def_buffer_deg_from_bbox
 from utils.latlon_from_bbox_and_buffer import latlon_from_bbox_and_buffer
+from PaddockTS.Data.environmental import download_environmental_data
+from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 from utils.PaddockTSWebQuery import PaddockTSWebQuery
 from utils.get_aspect_ratio import get_aspect_ratio
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,8 +73,11 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
         'end_date': str(q.end_date)}
     with open(meta_path, '+w') as file:
         json.dump(meta, file)
-    background_tasks.add_task(get_outputs, q2)
-    # get_outputs(q2)
+    # background_tasks.add_task(get_outputs, q2)
+    # background_tasks.add_task(get_paddocks, q2)
+    # background_tasks.add_task(download_environmental_data, q2)
+
+    get_outputs(q2)
     return RunResponse(job_id=job_id)
 
 @app.get("/results/{job_id}", response_model=ResultResponse)
