@@ -1,60 +1,271 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "react-grid-layout/css/styles.css";
-@import "react-resizable/css/styles.css";
 
-/* --- Theme (Black / Red / Green) --- */
-:root {
-  /* base */
-  --bg: #0a0a0a;
-  --card: #111214;
-  --text: #e6e6e6;
-  --muted: #9ca3af;
-  --border: #222428;
 
-  /* accents */
-  --red: #ef4444;    /* tailwind red-500 */
-  --red-600: #dc2626;
-  --green: #22c55e;  /* tailwind green-500 */
-  --green-600: #16a34a;
+@layer components {
+    
+    .app-root {
+        @apply fixed inset-0 flex flex-col bg-neutral-900 text-neutral-200;
+    }
+    
+    .app-topbar {
+        @apply flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-[20px];
+    }
+    
+    .app-title {
+        @apply text-neutral-400;
+    }
+    
+    .app-main {
+        @apply flex flex-1 min-h-0;
+    }
+    
+    .app-main-left {
+        @apply w-[500px] border-r border-neutral-800;
+    }
+    
+    .app-main-right {
+        @apply flex-1 relative;
+    }
+    
+    /* Search/results toggle */
+    
+    
+    .toggle-root {
+        @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[11px];
+    }
+    
+    .toggle-button {
+        @apply px-3 py-1 transition-colors;
+    }
+    
+    .toggle-button--spaced {
+        @apply ml-1;
+    }
+    
+    .toggle-button--active {
+        @apply bg-neutral-200 text-neutral-950;
+    }
+    
+    .toggle-button--inactive {
+        @apply text-neutral-300 hover:bg-neutral-800;
+    }
+    
+    .toggle-button--disabled {
+        @apply text-neutral-500 cursor-not-allowed;
+    }
+    
+    .date-root {
+        @apply relative text-[11px];
+    }
+    
+    .date-input-wrapper {
+        @apply relative;
+    }
+    
+    .date-icon-button {
+        @apply absolute inset-y-0 right-1 flex items-center text-xs text-neutral-300 hover:text-neutral-100;
+    }
+    
+    .date-popup {
+        @apply absolute z-50 mt-1 w-56 bg-neutral-950 border border-neutral-700 shadow-lg p-2;
+    }
+    
+    .date-header {
+        @apply flex items-center justify-between mb-2;
+    }
+    
+    .date-nav-button {
+        @apply px-1 py-0.5 hover:bg-neutral-800 text-neutral-300;
+    }
+    
+    .date-select {
+        @apply bg-neutral-900 border border-neutral-700 px-1 py-[2px] text-[11px] text-neutral-100 focus:outline-none;
+    }
+    
+    .date-weekdays-row {
+        @apply grid grid-cols-7 gap-1 mb-1;
+    }
+    
+    .date-weekday {
+        @apply text-[10px] text-center text-neutral-500;
+    }
+    
+    .date-days-grid {
+        @apply grid grid-cols-7 gap-1;
+    }
+    
+    .date-day-base {
+        @apply w-7 h-7 text-[11px] flex items-center justify-center;
+    }
+    
+    .date-day {
+        @apply text-neutral-200 hover:bg-neutral-800;
+    }
+    
+    /* Selected day – neutral, no cyan */
+    .date-day-selected {
+        @apply bg-neutral-100 text-neutral-900;
+    }
+    
+    
+    /* Map panel */
+    .map-panel-root {
+
+        /* @apply h-full w-full bg-neutral-900 border-r border-neutral-700
+           px-4 py-3 text-xs text-neutral-200
+           flex flex-col space-y-4 overflow-hidden; */
+/* 
+        @apply h-full w-full bg-neutral-900 border-r border-neutral-700
+           px-4 py-3 text-xs text-neutral-200
+           space-y-4 overflow-y-auto; */
+
+        @apply h-full w-full bg-neutral-900 border-r border-neutral-700
+         px-4 py-3 text-xs text-neutral-200
+         flex flex-col space-y-4 overflow-hidden;
+        
+    }
+    
+    /* Generic field styles */
+    .field-label {
+        @apply block text-[10px] text-neutral-400 tracking-wide uppercase;
+    }
+    
+    .field-input {
+        @apply  w-full bg-neutral-950 border border-neutral-700 px-2 py-[6px] text-[12px] text-neutral-100
+        focus:outline-none focus:ring-1 focus:ring-neutral-500;
+    }
+    
+    /* Query name row */
+    .query-name-row {
+        @apply flex gap-2;
+    }
+    
+    .query-name-input {
+        @apply field-input flex-1;
+    }
+    
+    .query-save-button {
+        @apply border border-neutral-600 px-3 py-[6px] text-[12px] text-neutral-100 hover:bg-neutral-800 whitespace-nowrap;
+    }
+    
+    /* Bounding box display */
+    .bbox-list {
+        @apply space-y-1 font-mono text-[12px] text-neutral-100;
+    }
+    
+    .bbox-row {
+        @apply flex justify-between;
+    }
+    
+    .bbox-label {
+        @apply text-neutral-400;
+    }
+    
+    .bbox-empty {
+        @apply text-[11px] text-neutral-500;
+    }
+    
+    /* Vertices section */
+    .vertices-textarea {
+        @apply field-input font-mono resize-none;
+    }
+    
+    .vertices-help {
+        @apply text-[11px] text-neutral-500;
+    }
+    
+    /* Time window grid */
+    .time-window-grid {
+        @apply grid grid-cols-2 gap-2;
+    }
+    
+    /* Buffer input just reuses field-input */
+    
+    /* Footer buttons + status */
+    .panel-footer {
+        @apply flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-800 mt-2;
+    }
+    
+    .select-area-button {
+        @apply border border-neutral-600 px-3 py-[6px] text-[12px] text-neutral-100 hover:bg-neutral-800;
+    }
+    
+    .run-button {
+        @apply px-3 py-[6px] text-[12px] border;
+    }
+    
+    .run-button--running {
+        @apply bg-neutral-700 border-neutral-600 cursor-not-allowed text-neutral-300;
+    }
+    
+    .run-button--idle {
+        @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
+    }
+    
+    .status-text {
+        @apply text-[11px] min-h-[1.25rem];
+    }
+    
+    .status-text--running {
+        @apply text-yellow-400 animate-pulse;
+    }
+    
+    .status-text--done {
+        @apply text-green-400;
+    }
+    
+    .status-text--error {
+        @apply text-red-400;
+    }
+    
+    /* Saved queries */
+    .saved-queries-section {
+        /* @apply pt-2 border-t border-neutral-800
+           flex-1 flex flex-col min-h-0; */
+        @apply pt-2 border-t border-neutral-800 mt-2
+         flex-1 flex flex-col min-h-0;
+    }
+    
+    .saved-queries-header {
+        @apply flex items-center justify-between mb-1;
+    }
+    
+    .saved-queries-count {
+        @apply text-[10px] text-neutral-500;
+    }
+    
+    .saved-queries-container {
+        /* @apply border border-neutral-700 bg-neutral-950
+           flex-1 overflow-y-auto; */
+
+          @apply border border-neutral-700 bg-neutral-950
+         flex-1 overflow-y-auto;
+    }
+    
+    .saved-queries-empty {
+        @apply px-2 py-2 text-[11px] text-neutral-500;
+    }
+    
+    .saved-queries-list {
+        @apply divide-y divide-neutral-800 text-[12px];
+    }
+    
+    .saved-query-button {
+        @apply w-full text-left px-2 py-1.5 hover:bg-neutral-800;
+    }
+    
+    .saved-query-button--selected {
+        @apply bg-neutral-800;
+    }
+    
+    .saved-query-name {
+        @apply truncate text-neutral-100;
+    }
+    
+    .saved-query-delete {
+        @apply ml-1 text-[20px] text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity;
+    }
 }
 
-html, body {
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* Layout helpers */
-.container { @apply max-w-6xl mx-auto px-4; }
-.card { @apply rounded-2xl shadow p-6 border; border-color: var(--border); background: var(--card); }
-
-/* Buttons */
-.btn { @apply rounded-xl px-4 py-2 font-medium transition; border: 1px solid transparent; }
-.btn-outline { background: transparent; border-color: var(--border); }
-.btn-red { background: var(--red); }
-.btn-red:hover { background: var(--red-600); }
-.btn-green { background: var(--green); }
-.btn-green:hover { background: var(--green-600); }
-
-/* Inputs */
-.input { @apply w-full rounded-xl px-3 py-2 outline-none border; border-color: var(--border); background: #0f1012; }
-.input:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 35%, transparent); }
-
-/* Links */
-.link { color: var(--green); }
-.link:hover { color: var(--green-600); }
-
-/* Badges / chips */
-.badge { @apply text-xs px-2 py-1 rounded-full border; border-color: var(--border); background: #0d0e10; }
-.badge-red { background: color-mix(in srgb, var(--red) 15%, transparent); border-color: color-mix(in srgb, var(--red) 40%, black); }
-.badge-green { background: color-mix(in srgb, var(--green) 15%, transparent); border-color: color-mix(in srgb, var(--green) 40%, black); }
-
-/* Utility for fancy headings */
-.gradient-title {
-  @apply font-semibold;
-  background: linear-gradient(90deg, var(--red), #f43f5e 35%, var(--green));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}

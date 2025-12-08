@@ -84,7 +84,7 @@ export default function MiniDatePicker({
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth(); // 0-11
 
-  // Year options around current year (adjust range as you like)
+  // Year options around current year
   const yearOptions = useMemo(() => {
     const base = new Date().getFullYear();
     const years: number[] = [];
@@ -116,12 +116,12 @@ export default function MiniDatePicker({
     setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  const handleMonthSelect = (e: any) => {
+  const handleMonthSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const m = Number(e.target.value);
     setViewDate((prev) => new Date(prev.getFullYear(), m, 1));
   };
 
-  const handleYearSelect = (e: any) => {
+  const handleYearSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const y = Number(e.target.value);
     setViewDate((prev) => new Date(y, prev.getMonth(), 1));
   };
@@ -135,19 +135,19 @@ export default function MiniDatePicker({
   const popupAlignClass = align === "right" ? "right-0" : "left-0";
 
   return (
-    <div ref={rootRef} className="relative text-[11px]">
+    <div ref={rootRef} className="date-root">
       {label && (
-        <label className="block text-[10px] text-neutral-400 tracking-wide uppercase mb-0.5">
+        <label className="field-label">
           {label}
         </label>
       )}
 
       {/* ISO input + calendar icon */}
-      <div className="relative">
+      <div className="date-input-wrapper">
         <input
           type="text"
           placeholder="YYYY-MM-DD"
-          className="w-full bg-neutral-950 border border-neutral-700 px-2 py-[6px] text-[12px] text-neutral-100 focus:outline-none focus:ring-1 focus:ring-cyan-500 pr-7"
+          className="field-input field-input--with-icon"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onClick={() => {
@@ -157,31 +157,26 @@ export default function MiniDatePicker({
         <button
           type="button"
           onClick={onToggle}
-          className="absolute inset-y-0 right-1 flex items-center text-xs text-neutral-300 hover:text-neutral-100"
+          className="date-icon-button"
         >
-          
+          {/* optional icon */}
         </button>
       </div>
 
       {isOpen && (
-        <div
-          className={
-            "absolute z-50 mt-1 w-56 bg-neutral-950 border border-neutral-700 shadow-lg p-2 " +
-            popupAlignClass
-          }
-        >
+        <div className={`date-popup ${popupAlignClass}`}>
           {/* header: prev/next + month/year selects */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="date-header">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="px-1 py-0.5 hover:bg-neutral-800 text-neutral-300"
+              className="date-nav-button"
             >
               ‹
             </button>
             <div className="flex items-center gap-1">
               <select
-                className="bg-neutral-900 border border-neutral-700 px-1 py-[2px] text-[11px] text-neutral-100 focus:outline-none"
+                className="date-select"
                 value={month}
                 onChange={handleMonthSelect}
               >
@@ -192,7 +187,7 @@ export default function MiniDatePicker({
                 ))}
               </select>
               <select
-                className="bg-neutral-900 border border-neutral-700 px-1 py-[2px] text-[11px] text-neutral-100 focus:outline-none"
+                className="date-select"
                 value={year}
                 onChange={handleYearSelect}
               >
@@ -206,18 +201,18 @@ export default function MiniDatePicker({
             <button
               type="button"
               onClick={handleNextMonth}
-              className="px-1 py-0.5 hover:bg-neutral-800 text-neutral-300"
+              className="date-nav-button"
             >
               ›
             </button>
           </div>
 
           {/* weekdays */}
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          <div className="date-weekdays-row">
             {WEEKDAYS.map((d) => (
               <div
                 key={d}
-                className="text-[10px] text-center text-neutral-500"
+                className="date-weekday"
               >
                 {d}
               </div>
@@ -225,7 +220,7 @@ export default function MiniDatePicker({
           </div>
 
           {/* days */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="date-days-grid">
             {days.map((d, idx) => {
               if (!d) {
                 return <div key={idx} />;
@@ -243,10 +238,8 @@ export default function MiniDatePicker({
                   type="button"
                   onClick={() => handleSelectDay(d)}
                   className={[
-                    "w-7 h-7 text-[11px] flex items-center justify-center",
-                    isSelected
-                      ? "bg-cyan-500 text-neutral-950"
-                      : "text-neutral-200 hover:bg-neutral-800",
+                    "date-day-base",
+                    isSelected ? "date-day-selected" : "date-day",
                   ].join(" ")}
                 >
                   {d.getDate()}
@@ -259,3 +252,4 @@ export default function MiniDatePicker({
     </div>
   );
 }
+
