@@ -2,7 +2,6 @@
 import { Selection } from "./Selection";
 
 export type SavedQuery = {
-  id: string;
   name: string;
   bbox: Selection;
   verticesText: string;

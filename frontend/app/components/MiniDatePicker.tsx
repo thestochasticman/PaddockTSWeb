@@ -1,179 +1,6 @@
 "use client";
 
-import {useEffect, useMemo, useState } from "react";
-
-// type MiniDatePickerProps = {
-//   label?: string;
-//   value: string;               // "YYYY-MM-DD" or ""
-//   onChange: (value: string) => void;
-// };
-
-// function parseDate(value: string): Date | null {
-//   if (!value) return null;
-//   const [y, m, d] = value.split("-").map(Number);
-//   if (!y || !m || !d) return null;
-//   return new Date(y, m - 1, d);
-// }
-
-// function formatDate(d: Date): string {
-//   const y = d.getFullYear();
-//   const m = String(d.getMonth() + 1).padStart(2, "0");
-//   const dd = String(d.getDate()).padStart(2, "0");
-//   return `${y}-${m}-${dd}`;
-// }
-
-// const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-
-// export default function MiniDatePicker({
-//   label,
-//   value,
-//   onChange,
-// }: MiniDatePickerProps) {
-//   const selectedDate = useMemo(() => parseDate(value), [value]);
-
-//   const [open, setOpen] = useState(false);
-//   const [viewDate, setViewDate] = useState<Date>(
-//     () => selectedDate ?? new Date()
-//   );
-
-//   const year = viewDate.getFullYear();
-//   const month = viewDate.getMonth(); // 0-11
-
-//   // Compute days for current month
-//   const daysInMonth = new Date(year, month + 1, 0).getDate();
-//   const firstDay = new Date(year, month, 1);
-//   // JS getDay: 0=Sun, ..., 6=Sat. We want Monday as first column.
-//   let startOffset = firstDay.getDay() - 1;
-//   if (startOffset < 0) startOffset = 6;
-
-//   const days: (Date | null)[] = [];
-//   for (let i = 0; i < startOffset; i++) days.push(null);
-//   for (let d = 1; d <= daysInMonth; d++) {
-//     days.push(new Date(year, month, d));
-//   }
-
-//   const handlePrevMonth = () => {
-//     setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-//   };
-
-//   const handleNextMonth = () => {
-//     setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-//   };
-
-//   const handleSelectDay = (d: Date | null) => {
-//     if (!d) return;
-//     onChange(formatDate(d));
-//     setOpen(false);
-//   };
-
-//   const displayText = selectedDate
-//     ? selectedDate.toLocaleDateString(undefined, {
-//         year: "numeric",
-//         month: "short",
-//         day: "numeric",
-//       })
-//     : "Select date";
-
-//   return (
-//     <div className="relative text-[11px]">
-//       {label && (
-//         <label className="block text-[10px] text-neutral-500 mb-0.5">
-//           {label}
-//         </label>
-//       )}
-
-//       {/* fake input */}
-//       <button
-//         type="button"
-//         onClick={() => setOpen((o) => !o)}
-//         className="w-full rounded-md bg-neutral-950 border border-neutral-700 px-2 py-[3px] text-left text-[11px] focus:outline-none focus:ring-1 focus:ring-cyan-500 flex items-center justify-between"
-//       >
-//         <span className={selectedDate ? "" : "text-neutral-500"}>
-//           {displayText}
-//         </span>
-//         <span className="material-icons text-[14px] text-neutral-400">
-//           event
-//         </span>
-//       </button>
-
-//       {open && (
-//         <div className="absolute z-50 mt-1 w-56 rounded-md bg-neutral-950 border border-neutral-700 shadow-lg p-2">
-//           {/* header */}
-//           <div className="flex items-center justify-between mb-2">
-//             <button
-//               type="button"
-//               onClick={handlePrevMonth}
-//               className="px-1 py-0.5 rounded hover:bg-neutral-800 text-neutral-300"
-//             >
-//               ‹
-//             </button>
-//             <div className="text-[11px] font-semibold text-neutral-200">
-//               {viewDate.toLocaleDateString(undefined, {
-//                 year: "numeric",
-//                 month: "long",
-//               })}
-//             </div>
-//             <button
-//               type="button"
-//               onClick={handleNextMonth}
-//               className="px-1 py-0.5 rounded hover:bg-neutral-800 text-neutral-300"
-//             >
-//               ›
-//             </button>
-//           </div>
-
-//           {/* weekdays */}
-//           <div className="grid grid-cols-7 gap-1 mb-1">
-//             {WEEKDAYS.map((d) => (
-//               <div
-//                 key={d}
-//                 className="text-[10px] text-center text-neutral-500"
-//               >
-//                 {d}
-//               </div>
-//             ))}
-//           </div>
-
-//           {/* days */}
-//           <div className="grid grid-cols-7 gap-1">
-//             {days.map((d, idx) => {
-//               if (!d) {
-//                 return <div key={idx} />;
-//               }
-
-//               const isSelected =
-//                 selectedDate &&
-//                 d.getFullYear() === selectedDate.getFullYear() &&
-//                 d.getMonth() === selectedDate.getMonth() &&
-//                 d.getDate() === selectedDate.getDate();
-
-//               return (
-//                 <button
-//                   key={idx}
-//                   type="button"
-//                   onClick={() => handleSelectDay(d)}
-//                   className={[
-//                     "w-7 h-7 rounded-full text-[11px] flex items-center justify-center",
-//                     isSelected
-//                       ? "bg-cyan-500 text-neutral-950"
-//                       : "text-neutral-200 hover:bg-neutral-800",
-//                   ].join(" ")}
-//                 >
-//                   {d.getDate()}
-//                 </button>
-//               );
-//             })}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
-// "use client";
-
-// import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type MiniDatePickerProps = {
   label?: string;
@@ -199,6 +26,20 @@ function formatDate(d: Date): string {
 }
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 export default function MiniDatePicker({
   label,
@@ -208,6 +49,8 @@ export default function MiniDatePicker({
   onToggle,
   align = "left",
 }: MiniDatePickerProps) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
   const selectedDate = useMemo(() => parseDate(value), [value]);
 
   const [viewDate, setViewDate] = useState<Date>(
@@ -221,8 +64,35 @@ export default function MiniDatePicker({
     }
   }, [isOpen, selectedDate]);
 
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(event.target as Node)) {
+        onToggle(); // toggle from open → closed
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onToggle]);
+
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth(); // 0-11
+
+  // Year options around current year
+  const yearOptions = useMemo(() => {
+    const base = new Date().getFullYear();
+    const years: number[] = [];
+    for (let y = base - 30; y <= base + 20; y++) {
+      years.push(y);
+    }
+    return years;
+  }, []);
 
   // Compute days of current month
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -246,79 +116,103 @@ export default function MiniDatePicker({
     setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
+  const handleMonthSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const m = Number(e.target.value);
+    setViewDate((prev) => new Date(prev.getFullYear(), m, 1));
+  };
+
+  const handleYearSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const y = Number(e.target.value);
+    setViewDate((prev) => new Date(y, prev.getMonth(), 1));
+  };
+
   const handleSelectDay = (d: Date | null) => {
     if (!d) return;
     onChange(formatDate(d));
-    onToggle(); // close after selection
+    onToggle(); // parent flips isOpen → false
   };
-
-  const displayText = selectedDate
-    ? selectedDate.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "Select date";
 
   const popupAlignClass = align === "right" ? "right-0" : "left-0";
 
   return (
-    <div className="relative text-[11px]">
+    <div ref={rootRef} className="date-root">
       {label && (
-        <label className="block text-[10px] text-neutral-500 mb-0.5">
+        <label className="map-field-label">
           {label}
         </label>
       )}
 
-      {/* fake input */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full rounded-md bg-neutral-950 border border-neutral-700 px-2 py-[3px] text-left text-[11px] focus:outline-none focus:ring-1 focus:ring-cyan-500 flex items-center justify-between"
-      >
-        <span className={selectedDate ? "" : "text-neutral-500"}>
-          {displayText}
-        </span>
-        <span className="ml-1 text-xs">📅</span>
-      </button>
+      {/* ISO input + calendar icon */}
+      <div className="date-input-wrapper">
+        <input
+          type="text"
+          placeholder="YYYY-MM-DD"
+          className="map-field-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onClick={() => {
+            if (!isOpen) onToggle();
+          }}
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="date-icon-button"
+        >
+          {/* optional icon */}
+        </button>
+      </div>
 
       {isOpen && (
-        <div
-          className={
-            "absolute z-50 mt-1 w-56 rounded-md bg-neutral-950 border border-neutral-700 shadow-lg p-2 " +
-            popupAlignClass
-          }
-        >
-          {/* header */}
-          <div className="flex items-center justify-between mb-2">
+        <div className={`date-popup ${popupAlignClass}`}>
+          {/* header: prev/next + month/year selects */}
+          <div className="date-header">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="px-1 py-0.5 rounded hover:bg-neutral-800 text-neutral-300"
+              className="date-nav-button"
             >
               ‹
             </button>
-            <div className="text-[11px] font-semibold text-neutral-200">
-              {viewDate.toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "long",
-              })}
+            <div className="flex items-center gap-1">
+              <select
+                className="date-select"
+                value={month}
+                onChange={handleMonthSelect}
+              >
+                {MONTH_NAMES.map((m, idx) => (
+                  <option key={m} value={idx}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="date-select"
+                value={year}
+                onChange={handleYearSelect}
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
             </div>
             <button
               type="button"
               onClick={handleNextMonth}
-              className="px-1 py-0.5 rounded hover:bg-neutral-800 text-neutral-300"
+              className="date-nav-button"
             >
               ›
             </button>
           </div>
 
           {/* weekdays */}
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          <div className="date-weekdays-row">
             {WEEKDAYS.map((d) => (
               <div
                 key={d}
-                className="text-[10px] text-center text-neutral-500"
+                className="date-weekday"
               >
                 {d}
               </div>
@@ -326,7 +220,7 @@ export default function MiniDatePicker({
           </div>
 
           {/* days */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="date-days-grid">
             {days.map((d, idx) => {
               if (!d) {
                 return <div key={idx} />;
@@ -344,10 +238,8 @@ export default function MiniDatePicker({
                   type="button"
                   onClick={() => handleSelectDay(d)}
                   className={[
-                    "w-7 h-7 rounded-full text-[11px] flex items-center justify-center",
-                    isSelected
-                      ? "bg-cyan-500 text-neutral-950"
-                      : "text-neutral-200 hover:bg-neutral-800",
+                    "date-day-base",
+                    isSelected ? "date-day-selected" : "date-day",
                   ].join(" ")}
                 >
                   {d.getDate()}

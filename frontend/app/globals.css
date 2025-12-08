@@ -1,60 +1,325 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "react-grid-layout/css/styles.css";
-@import "react-resizable/css/styles.css";
 
-/* --- Theme (Black / Red / Green) --- */
-:root {
-  /* base */
-  --bg: #0a0a0a;
-  --card: #111214;
-  --text: #e6e6e6;
-  --muted: #9ca3af;
-  --border: #222428;
+@layer components {
+    
+    /* App shell – no scaling here */
+    .app-root {
+        @apply fixed inset-0 flex flex-col bg-neutral-900 text-neutral-200;
+    }
+    
+    .app-topbar {
+        @apply flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-[25px];
+    }
+    
+    .app-title {
+        @apply text-neutral-400;
+    }
+    
+    .app-main {
+        @apply flex flex-1 min-h-0;
+    }
+    
+    .app-main-left {
+        @apply w-[150px] border-r border-neutral-800;
+    }
+    
+    .app-main-right {
+        @apply flex-1 relative;
+    }
+    
+    /* Toggle – no scaling, fixed text size */
+    .toggle-root {
+        @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[20px];
+    }
+    
+    .toggle-button {
+        @apply px-3 py-1 transition-colors;
+    }
+    
+    .toggle-button--spaced {
+        @apply ml-1;
+    }
+    
+    .toggle-button--active {
+        @apply bg-neutral-200 text-neutral-950;
+    }
+    
+    .toggle-button--inactive {
+        @apply text-neutral-300 hover:bg-neutral-800;
+    }
+    
+    .toggle-button--disabled {
+        @apply text-neutral-500 cursor-not-allowed;
+    }
+    
+    
+    /* Date picker – structure only, sizes use em so they scale with parent */
+    .date-root {
+        @apply relative;
+        /* no font-size here; will inherit from parent (map panel or elsewhere) */
+    }
+    .date-input {
+        @apply bg-neutral-950 border border-neutral-700 text-neutral-100
+            focus:outline-none focus:ring-1 focus:ring-neutral-500;
+        padding: 0;        /* no padding: box just hugs the date text */
+        font-size: 1em;    /* inherits scale from parent (e.g. map-panel-root) */
+        line-height: 1.2;
+        width: 50%;
+  }
 
-  /* accents */
-  --red: #ef4444;    /* tailwind red-500 */
-  --red-600: #dc2626;
-  --green: #22c55e;  /* tailwind green-500 */
-  --green-600: #16a34a;
-}
+    .date-input-wrapper {
+        @apply relative;
+    }
+    
+    .date-icon-button {
+        @apply absolute inset-y-0 right-1 flex items-center text-xs text-neutral-300 hover:text-neutral-100;
+    }
+    
+    .date-popup {
+        @apply absolute z-50 mt-1 bg-neutral-950 border border-neutral-700 shadow-lg p-2;
+        width: 16em; /* em → relative to parent font size */
+    }
+    
+    .date-header {
+        @apply flex items-center justify-between mb-2;
+    }
+    
+    .date-nav-button {
+        @apply px-1 py-0.5 hover:bg-neutral-800 text-neutral-300;
+        font-size: 0.9em;
+    }
+    
+    .date-select {
+        @apply bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none;
+        font-size: 0.85em;
+        padding: 0.15em 0.35em;
+    }
+    
+    .date-weekdays-row {
+        @apply grid grid-cols-7 gap-1 mb-1;
+    }
+    
+    .date-weekday {
+        @apply text-center text-neutral-500;
+        font-size: 0.7em;
+    }
+    
+    .date-days-grid {
+        @apply grid grid-cols-7 gap-1;
+    }
+    
+    .date-day-base {
+        @apply flex items-center justify-center;
+        width: 2em;
+        height: 2em;
+        font-size: 0.9em;
+    }
+    
+    .date-day {
+        @apply text-neutral-200 hover:bg-neutral-800;
+    }
+    
+    .date-day-selected {
+        @apply bg-neutral-100 text-neutral-900;
+    }
+    /* ---------- Map panel (only thing that scales) ---------- */
+    
+    .map-panel-root {
+        /* @apply h-full w-full bg-neutral-900 border-r border-neutral-700
+        px-4 py-3 text-neutral-200
+        flex flex-col space-y-4 overflow-hidden; */
+        
+        @apply h-full bg-neutral-900 border-r border-neutral-700
+        px-4 py-3 text-neutral-200 flex flex-col space-y-4 overflow-hidden;
+        
+        /* Scale knob **only for this panel** */
+        --map-panel-scale:1.5;              /* change this to 1.1, 1.2, etc */
+        font-size: calc(11px * var(--map-panel-scale));
+        line-height: 1.4;
+        
+        width: calc(22rem * var(--map-panel-scale));
+        
+    } 
+    
+    
+    
+    
+    /* field-label inside map panel scales with the panel font size */
+    .map-panel-root .map-field-label {
+        font-size: 1em;
+    }
+    
+    /* Date picker inside map panel scales too (because date-root inherits) */
+    .map-panel-root .date-root {
+        font-size: 1em; /* relative to map-panel-root base */
+    }
+    
+    /* Map-panel-specific field styles (you'll use these in TSX) */
+    
+    .map-panel-root .map-field-input {
+        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
+        focus:outline-none focus:ring-1 focus:ring-neutral-500;
+        font-size: 0.9em;
+        padding: 0.45em 0.75em;
+    }
+    
+    .map-panel-root .map-query-name-row {
+        @apply flex gap-2;
+    }
+    
+    .map-panel-root .map-query-name-input {
+        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
+        focus:outline-none focus:ring-1 focus:ring-neutral-500 flex-1;
+        font-size: 1em;
+        padding: 0.45em 0.75em;
+    }
+    
+    .map-panel-root .map-query-save-button {
+        @apply border border-neutral-600 text-neutral-100 hover:bg-neutral-800 whitespace-nowrap;
+        font-size: 0.95em;
+        padding: 0.45em 0.9em;
+    }
+    
+    .map-panel-root .map-bbox-list {
+        @apply space-y-1 font-mono text-neutral-100;
+        font-size: 0.95em;
+    }
+    
+    .map-panel-root .map-bbox-row {
+        @apply flex items-baseline gap-4;
+    }
+    
+    .map-panel-root .map-bbox-label {
+        @apply text-neutral-400;
+    }
+    
+    .map-panel-root .map-bbox-empty {
+        @apply text-neutral-500;
+        font-size: 0.85em;
+    }
+    
+    .map-panel-root .map-vertices-textarea {
+        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
+        focus:outline-none focus:ring-1 focus:ring-neutral-500
+        font-mono resize-none;
+        font-size: 1em;
+        padding: 0.45em 0.75em;
+    }
+    
+    .map-panel-root .map-vertices-help {
+        @apply text-neutral-500;
+        font-size: 0.85em;
+    }
+    
+    .map-panel-root .map-time-window-grid {
+        @apply grid grid-cols-3 gap-16;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        align-items: end;
 
-html, body {
-  background: var(--bg);
-  color: var(--text);
-}
+    }
+    
+    .map-panel-root .map-panel-footer {
+        @apply flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-800 mt-2;
+    }
+    
+    .map-panel-root .map-select-area-button {
+        @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
+        @apply w-auto;
+        /* @apply h-11; */
+        font-size: 0.95em;
+        padding: 0.45em 0.9em;
+    }
+    
+    .map-panel-root .map-run-button {
 
-/* Layout helpers */
-.container { @apply max-w-6xl mx-auto px-4; }
-.card { @apply rounded-2xl shadow p-6 border; border-color: var(--border); background: var(--card); }
-
-/* Buttons */
-.btn { @apply rounded-xl px-4 py-2 font-medium transition; border: 1px solid transparent; }
-.btn-outline { background: transparent; border-color: var(--border); }
-.btn-red { background: var(--red); }
-.btn-red:hover { background: var(--red-600); }
-.btn-green { background: var(--green); }
-.btn-green:hover { background: var(--green-600); }
-
-/* Inputs */
-.input { @apply w-full rounded-xl px-3 py-2 outline-none border; border-color: var(--border); background: #0f1012; }
-.input:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 35%, transparent); }
-
-/* Links */
-.link { color: var(--green); }
-.link:hover { color: var(--green-600); }
-
-/* Badges / chips */
-.badge { @apply text-xs px-2 py-1 rounded-full border; border-color: var(--border); background: #0d0e10; }
-.badge-red { background: color-mix(in srgb, var(--red) 15%, transparent); border-color: color-mix(in srgb, var(--red) 40%, black); }
-.badge-green { background: color-mix(in srgb, var(--green) 15%, transparent); border-color: color-mix(in srgb, var(--green) 40%, black); }
-
-/* Utility for fancy headings */
-.gradient-title {
-  @apply font-semibold;
-  background: linear-gradient(90deg, var(--red), #f43f5e 35%, var(--green));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+        @apply border;
+        @apply max-w-fit;
+        font-size: 0.95em;
+        padding: 0.45em 0.9em;
+    }
+    
+    .map-panel-root .map-run-button--running {
+        @apply bg-neutral-700 border-neutral-600 cursor-not-allowed text-neutral-300;
+    }
+    
+    .map-panel-root .map-run-button--idle {
+        @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
+    }
+    
+    .map-panel-root .map-status-text {
+        @apply min-h-[1.25rem];
+        font-size: 0.85em;
+    }
+    
+    .map-panel-root .map-status-text--running {
+        @apply text-yellow-400 animate-pulse;
+    }
+    
+    .map-panel-root .map-status-text--done {
+        @apply text-green-400;
+    }
+    
+    .map-panel-root .map-status-text--error {
+        @apply text-red-400;
+    }
+    
+    .map-panel-root .map-saved-queries-section {
+        /* @apply pt-2 border-t border-neutral-800 mt-2 */
+        /* @apply pt-2 border-t border-neutral-800 mt-2; */
+        /* flex-1 flex flex-col min-h-0; */
+          @apply pt-2 border-t border-neutral-800 mt-2;
+        /* this makes the whole section grow to fill the remaining height */
+        /* @apply flex flex-col flex-1 min-h-0; */
+            @apply flex flex-col flex-1 min-h-0;
+    }
+    
+    .map-panel-root .map-saved-queries-header {
+        @apply flex items-center justify-between mb-1;
+    }
+    
+    .map-panel-root .map-saved-queries-count {
+        @apply text-neutral-500;
+        font-size: 0.8em;
+    }
+    
+    .map-panel-root .map-saved-queries-container {
+        
+        @apply border border-neutral-700 bg-neutral-950 overflow-y-auto;
+        /* let it grow until near bottom of viewport, then scroll */
+        max-height: 100%; /* tweak 260px until it visually hits the bottom */
+    }
+    
+    .map-panel-root .map-saved-queries-empty {
+        @apply px-2 py-2 text-neutral-500;
+        font-size: 0.85em;
+    }
+    
+    .map-panel-root .map-saved-queries-list {
+        @apply divide-y divide-neutral-800;
+        font-size: 0.95em;
+    }
+    
+    .map-panel-root .map-saved-query-row {
+        @apply flex items-center justify-between px-2 py-1.5;
+    }
+    
+    .map-panel-root .map-saved-query-button {
+        @apply flex-1 text-left hover:bg-neutral-800;
+    }
+    
+    .map-panel-root .map-saved-query-button--selected {
+        @apply bg-neutral-800;
+    }
+    
+    .map-panel-root .map-saved-query-name {
+        @apply truncate text-neutral-100;
+    }
+    
+    .map-panel-root .map-saved-query-delete {
+        @apply ml-2 text-neutral-500 hover:text-red-400;
+        font-size: 1.2em;
+    }
+    
+} /* end @layer components */
