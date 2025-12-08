@@ -158,52 +158,117 @@ export function MapQueryPanel() {
     };
     
     // --- Save current setup as a named query ---
-    const handleSaveCurrent = () => {
-        const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
-        if (!bbox) {
-            window.alert("Please provide at least one valid coordinate before saving.");
-            return;
-        }
+//     const handleSaveCurrent = () => {
+//         const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
+//         if (!bbox) {
+//             window.alert("Please provide at least one valid coordinate before saving.");
+//             return;
+//         }
         
-        const trimmedName = queryName.trim();
-        if (!trimmedName) {
-            window.alert("Please enter a name for the query before saving.");
-            return;
-        }
+//         const trimmedName = queryName.trim();
+//         if (!trimmedName) {
+//             window.alert("Please enter a name for the query before saving.");
+//             return;
+//         }
         
-        const finalName = trimmedName;
+//         const finalName = trimmedName;
         
-        if (selectedQueryName) {
-            // Update existing (by previously selected name)
-            setSavedQueries((prev) =>
-                prev.map((sq) =>
-                    sq.name === selectedQueryName
-            ? {
-                ...sq,
-                name: finalName,
-                bbox,
-                verticesText,
-                startDate,
-                endDate,
+//         if (selectedQueryName) {
+//             // Update existing (by previously selected name)
+//             setSavedQueries((prev) =>
+//                 prev.map((sq) =>
+//                     sq.name === selectedQueryName
+//             ? {
+//                 ...sq,
+//                 name: finalName,
+//                 bbox,
+//                 verticesText,
+//                 startDate,
+//                 endDate,
+//             }
+//             : sq
+//         )
+//     );
+// } else {
+//     // Create new
+//     const newQuery: SavedQuery = {
+//         name: finalName,
+//         bbox,
+//         verticesText,
+//         startDate,
+//         endDate,
+//     };
+    
+//     setSavedQueries((prev) => [newQuery, ...prev]);
+// }
+
+// setSelectedQueryName(finalName);
+// setQueryName(finalName);
+// };
+
+const handleSaveCurrent = () => {
+  const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
+  if (!bbox) {
+    window.alert("Please provide at least one valid coordinate before saving.");
+    return;
+  }
+
+  const trimmedName = queryName.trim();
+  if (!trimmedName) {
+    window.alert("Please enter a name for the query before saving.");
+    return;
+  }
+
+  const finalName = trimmedName;
+
+  // Disallow duplicate names
+  const existing = savedQueries.find((sq) => sq.name === finalName);
+
+  if (!selectedQueryName) {
+    // Creating a NEW query – block if name already exists
+    if (existing) {
+      window.alert("A query with this name already exists. Please choose a different name.");
+      return;
+    }
+  } else {
+    // Updating an EXISTING query – block if renaming to another existing name
+    if (finalName !== selectedQueryName && existing) {
+      window.alert("Another query with this name already exists. Please choose a different name.");
+      return;
+    }
+  }
+
+  if (selectedQueryName) {
+    // Update existing (by previously selected name)
+    setSavedQueries((prev) =>
+      prev.map((sq) =>
+        sq.name === selectedQueryName
+          ? {
+              ...sq,
+              name: finalName,
+              bbox,
+              verticesText,
+              startDate,
+              endDate,
             }
-            : sq
-        )
+          : sq
+      )
     );
-} else {
+  } else {
     // Create new
     const newQuery: SavedQuery = {
-        name: finalName,
-        bbox,
-        verticesText,
-        startDate,
-        endDate,
+      name: finalName,
+      bbox,
+      verticesText,
+      startDate,
+      endDate,
     };
-    
-    setSavedQueries((prev) => [newQuery, ...prev]);
-}
 
-setSelectedQueryName(finalName);
-setQueryName(finalName);
+    setSavedQueries((prev) => [newQuery, ...prev]);
+  }
+
+  setSelectedQueryName(finalName);
+  setQueryName(finalName);
 };
 
 // Select a saved query from the list (by name)
@@ -465,7 +530,7 @@ return (
 
 
     {/* Query name + Save button */}
-    <div className="space-y-1">
+    <div className="space-y-2">
     <label className="map-field-label">Query Name(Optional)</label>
     <div className="map-query-name-row">
     <input
@@ -481,6 +546,7 @@ return (
     }}
     />
     
+    
     <button
     type="button"
     className="map-query-save-button"
@@ -488,24 +554,8 @@ return (
     >
     Save
     </button>
-    
-    </div>
-    </div>
-    
-    
 
-    
-    {/* Buttons + status */}
-    <div className="map-panel-footer">
-    <div className="flex gap-2">
-    {/* <button
-    type="button"
-    className="map-select-area-button"
-    onClick={handleSelectClick}
-    >
-    Select area
-    </button> */}
-    <button
+     <button
     type="button"
     disabled={status === "running"}
     className={[
@@ -518,21 +568,10 @@ return (
     >
     {status === "running" ? "Running…" : "Run"}
     </button>
-    </div>
     
-    <div className="map-status-text">
-    {status === "running" && (
-        <span className="map-status-text--running">⏳ Fetching…</span>
-    )}
-    {status === "done" && (
-        <span className="map-status-text--done"> Completed</span>
-    )}
-    {status === "error" && (
-        <span className="map-status-text--error">{error}</span>
-    )}
     </div>
     </div>
-    
+
     
     {/* Saved queries – directly below buttons */}
     <div className="map-saved-queries-section">
