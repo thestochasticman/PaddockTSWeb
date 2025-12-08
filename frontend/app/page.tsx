@@ -16,7 +16,7 @@ export default function HomePage() {
       {/* Main content: search (left) + map (right) */}
       <div className="app-main">
         {/* LEFT: fixed-width query panel */}
-        <div className="app-main-left">
+        <div className="app-left">
           <MapQueryPanel />
         </div>
 

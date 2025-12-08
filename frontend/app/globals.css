@@ -2,15 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer components {
     
+    /* App shell – no scaling here */
     .app-root {
         @apply fixed inset-0 flex flex-col bg-neutral-900 text-neutral-200;
     }
     
     .app-topbar {
-        @apply flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-[20px];
+        @apply flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-[25px];
     }
     
     .app-title {
@@ -22,18 +22,16 @@
     }
     
     .app-main-left {
-        @apply w-[500px] border-r border-neutral-800;
+        @apply w-[150px] border-r border-neutral-800;
     }
     
     .app-main-right {
         @apply flex-1 relative;
     }
     
-    /* Search/results toggle */
-    
-    
+    /* Toggle – no scaling, fixed text size */
     .toggle-root {
-        @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[11px];
+        @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[20px];
     }
     
     .toggle-button {
@@ -56,8 +54,11 @@
         @apply text-neutral-500 cursor-not-allowed;
     }
     
+    
+    /* Date picker – structure only, sizes use em so they scale with parent */
     .date-root {
-        @apply relative text-[11px];
+        @apply relative;
+        /* no font-size here; will inherit from parent (map panel or elsewhere) */
     }
     
     .date-input-wrapper {
@@ -69,7 +70,8 @@
     }
     
     .date-popup {
-        @apply absolute z-50 mt-1 w-56 bg-neutral-950 border border-neutral-700 shadow-lg p-2;
+        @apply absolute z-50 mt-1 bg-neutral-950 border border-neutral-700 shadow-lg p-2;
+        width: 16em; /* em → relative to parent font size */
     }
     
     .date-header {
@@ -78,10 +80,13 @@
     
     .date-nav-button {
         @apply px-1 py-0.5 hover:bg-neutral-800 text-neutral-300;
+        font-size: 0.9em;
     }
     
     .date-select {
-        @apply bg-neutral-900 border border-neutral-700 px-1 py-[2px] text-[11px] text-neutral-100 focus:outline-none;
+        @apply bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none;
+        font-size: 0.85em;
+        padding: 0.15em 0.35em;
     }
     
     .date-weekdays-row {
@@ -89,7 +94,8 @@
     }
     
     .date-weekday {
-        @apply text-[10px] text-center text-neutral-500;
+        @apply text-center text-neutral-500;
+        font-size: 0.7em;
     }
     
     .date-days-grid {
@@ -97,175 +103,208 @@
     }
     
     .date-day-base {
-        @apply w-7 h-7 text-[11px] flex items-center justify-center;
+        @apply flex items-center justify-center;
+        width: 2em;
+        height: 2em;
+        font-size: 0.9em;
     }
     
     .date-day {
         @apply text-neutral-200 hover:bg-neutral-800;
     }
     
-    /* Selected day – neutral, no cyan */
     .date-day-selected {
         @apply bg-neutral-100 text-neutral-900;
     }
+    /* ---------- Map panel (only thing that scales) ---------- */
     
-    
-    /* Map panel */
     .map-panel-root {
-
         /* @apply h-full w-full bg-neutral-900 border-r border-neutral-700
-           px-4 py-3 text-xs text-neutral-200
-           flex flex-col space-y-4 overflow-hidden; */
-/* 
-        @apply h-full w-full bg-neutral-900 border-r border-neutral-700
-           px-4 py-3 text-xs text-neutral-200
-           space-y-4 overflow-y-auto; */
-
-        @apply h-full w-full bg-neutral-900 border-r border-neutral-700
-         px-4 py-3 text-xs text-neutral-200
-         flex flex-col space-y-4 overflow-hidden;
+        px-4 py-3 text-neutral-200
+        flex flex-col space-y-4 overflow-hidden; */
         
+        @apply h-full bg-neutral-900 border-r border-neutral-700
+        px-4 py-3 text-neutral-200 flex flex-col space-y-4 overflow-hidden;
+        
+        /* Scale knob **only for this panel** */
+        --map-panel-scale:1.5;              /* change this to 1.1, 1.2, etc */
+        font-size: calc(11px * var(--map-panel-scale));
+        line-height: 1.4;
+        
+        width: calc(22rem * var(--map-panel-scale));
+        
+    } 
+    
+    
+    
+    
+    /* field-label inside map panel scales with the panel font size */
+    .map-panel-root .map-field-label {
+        font-size: 1em;
     }
     
-    /* Generic field styles */
-    .field-label {
-        @apply block text-[10px] text-neutral-400 tracking-wide uppercase;
+    /* Date picker inside map panel scales too (because date-root inherits) */
+    .map-panel-root .date-root {
+        font-size: 1em; /* relative to map-panel-root base */
     }
     
-    .field-input {
-        @apply  w-full bg-neutral-950 border border-neutral-700 px-2 py-[6px] text-[12px] text-neutral-100
+    /* Map-panel-specific field styles (you'll use these in TSX) */
+    
+    .map-panel-root .map-field-input {
+        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
         focus:outline-none focus:ring-1 focus:ring-neutral-500;
+        font-size: 0.9em;
+        padding: 0.45em 0.75em;
     }
     
-    /* Query name row */
-    .query-name-row {
+    .map-panel-root .map-query-name-row {
         @apply flex gap-2;
     }
     
-    .query-name-input {
-        @apply field-input flex-1;
+    .map-panel-root .map-query-name-input {
+        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
+        focus:outline-none focus:ring-1 focus:ring-neutral-500 flex-1;
+        font-size: 1em;
+        padding: 0.45em 0.75em;
     }
     
-    .query-save-button {
-        @apply border border-neutral-600 px-3 py-[6px] text-[12px] text-neutral-100 hover:bg-neutral-800 whitespace-nowrap;
+    .map-panel-root .map-query-save-button {
+        @apply border border-neutral-600 text-neutral-100 hover:bg-neutral-800 whitespace-nowrap;
+        font-size: 0.95em;
+        padding: 0.45em 0.9em;
     }
     
-    /* Bounding box display */
-    .bbox-list {
-        @apply space-y-1 font-mono text-[12px] text-neutral-100;
+    .map-panel-root .map-bbox-list {
+        @apply space-y-1 font-mono text-neutral-100;
+        font-size: 0.95em;
     }
     
-    .bbox-row {
-        @apply flex justify-between;
+    .map-panel-root .map-bbox-row {
+        @apply flex items-baseline gap-4;
     }
     
-    .bbox-label {
+    .map-panel-root .map-bbox-label {
         @apply text-neutral-400;
     }
     
-    .bbox-empty {
-        @apply text-[11px] text-neutral-500;
+    .map-panel-root .map-bbox-empty {
+        @apply text-neutral-500;
+        font-size: 0.85em;
     }
     
-    /* Vertices section */
-    .vertices-textarea {
-        @apply field-input font-mono resize-none;
+    .map-panel-root .map-vertices-textarea {
+        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
+        focus:outline-none focus:ring-1 focus:ring-neutral-500
+        font-mono resize-none;
+        font-size: 1em;
+        padding: 0.45em 0.75em;
     }
     
-    .vertices-help {
-        @apply text-[11px] text-neutral-500;
+    .map-panel-root .map-vertices-help {
+        @apply text-neutral-500;
+        font-size: 0.85em;
     }
     
-    /* Time window grid */
-    .time-window-grid {
+    .map-panel-root .map-time-window-grid {
         @apply grid grid-cols-2 gap-2;
     }
     
-    /* Buffer input just reuses field-input */
-    
-    /* Footer buttons + status */
-    .panel-footer {
+    .map-panel-root .map-panel-footer {
         @apply flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-800 mt-2;
     }
     
-    .select-area-button {
-        @apply border border-neutral-600 px-3 py-[6px] text-[12px] text-neutral-100 hover:bg-neutral-800;
+    .map-panel-root .map-select-area-button {
+        @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
+        font-size: 0.95em;
+        padding: 0.45em 0.9em;
     }
     
-    .run-button {
-        @apply px-3 py-[6px] text-[12px] border;
+    .map-panel-root .map-run-button {
+        @apply border;
+        font-size: 0.95em;
+        padding: 0.45em 0.9em;
     }
     
-    .run-button--running {
+    .map-panel-root .map-run-button--running {
         @apply bg-neutral-700 border-neutral-600 cursor-not-allowed text-neutral-300;
     }
     
-    .run-button--idle {
+    .map-panel-root .map-run-button--idle {
         @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
     }
     
-    .status-text {
-        @apply text-[11px] min-h-[1.25rem];
+    .map-panel-root .map-status-text {
+        @apply min-h-[1.25rem];
+        font-size: 0.85em;
     }
     
-    .status-text--running {
+    .map-panel-root .map-status-text--running {
         @apply text-yellow-400 animate-pulse;
     }
     
-    .status-text--done {
+    .map-panel-root .map-status-text--done {
         @apply text-green-400;
     }
     
-    .status-text--error {
+    .map-panel-root .map-status-text--error {
         @apply text-red-400;
     }
     
-    /* Saved queries */
-    .saved-queries-section {
-        /* @apply pt-2 border-t border-neutral-800
-           flex-1 flex flex-col min-h-0; */
-        @apply pt-2 border-t border-neutral-800 mt-2
-         flex-1 flex flex-col min-h-0;
+    .map-panel-root .map-saved-queries-section {
+        /* @apply pt-2 border-t border-neutral-800 mt-2 */
+        /* @apply pt-2 border-t border-neutral-800 mt-2; */
+        /* flex-1 flex flex-col min-h-0; */
+          @apply pt-2 border-t border-neutral-800 mt-2;
+        /* this makes the whole section grow to fill the remaining height */
+        /* @apply flex flex-col flex-1 min-h-0; */
+            @apply flex flex-col flex-1 min-h-0;
     }
     
-    .saved-queries-header {
+    .map-panel-root .map-saved-queries-header {
         @apply flex items-center justify-between mb-1;
     }
     
-    .saved-queries-count {
-        @apply text-[10px] text-neutral-500;
+    .map-panel-root .map-saved-queries-count {
+        @apply text-neutral-500;
+        font-size: 0.8em;
     }
     
-    .saved-queries-container {
-        /* @apply border border-neutral-700 bg-neutral-950
-           flex-1 overflow-y-auto; */
-
-          @apply border border-neutral-700 bg-neutral-950
-         flex-1 overflow-y-auto;
+    .map-panel-root .map-saved-queries-container {
+        
+        @apply border border-neutral-700 bg-neutral-950 overflow-y-auto;
+        /* let it grow until near bottom of viewport, then scroll */
+        max-height: 100%; /* tweak 260px until it visually hits the bottom */
     }
     
-    .saved-queries-empty {
-        @apply px-2 py-2 text-[11px] text-neutral-500;
+    .map-panel-root .map-saved-queries-empty {
+        @apply px-2 py-2 text-neutral-500;
+        font-size: 0.85em;
     }
     
-    .saved-queries-list {
-        @apply divide-y divide-neutral-800 text-[12px];
+    .map-panel-root .map-saved-queries-list {
+        @apply divide-y divide-neutral-800;
+        font-size: 0.95em;
     }
     
-    .saved-query-button {
-        @apply w-full text-left px-2 py-1.5 hover:bg-neutral-800;
+    .map-panel-root .map-saved-query-row {
+        @apply flex items-center justify-between px-2 py-1.5;
     }
     
-    .saved-query-button--selected {
+    .map-panel-root .map-saved-query-button {
+        @apply flex-1 text-left hover:bg-neutral-800;
+    }
+    
+    .map-panel-root .map-saved-query-button--selected {
         @apply bg-neutral-800;
     }
     
-    .saved-query-name {
+    .map-panel-root .map-saved-query-name {
         @apply truncate text-neutral-100;
     }
     
-    .saved-query-delete {
-        @apply ml-1 text-[20px] text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity;
+    .map-panel-root .map-saved-query-delete {
+        @apply ml-2 text-neutral-500 hover:text-red-400;
+        font-size: 1.2em;
     }
-}
-
+    
+} /* end @layer components */

@@ -137,7 +137,7 @@ export default function MiniDatePicker({
   return (
     <div ref={rootRef} className="date-root">
       {label && (
-        <label className="field-label">
+        <label className="map-field-label">
           {label}
         </label>
       )}
@@ -147,7 +147,7 @@ export default function MiniDatePicker({
         <input
           type="text"
           placeholder="YYYY-MM-DD"
-          className="field-input field-input--with-icon"
+          className="map-field-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onClick={() => {
