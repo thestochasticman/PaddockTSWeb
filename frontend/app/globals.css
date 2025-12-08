@@ -233,7 +233,9 @@
     }
     
     .map-panel-root .map-run-button {
+
         @apply border;
+        @apply max-w-fit;
         font-size: 0.95em;
         padding: 0.45em 0.9em;
     }

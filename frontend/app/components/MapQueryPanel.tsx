@@ -388,7 +388,7 @@ return (
     
     {/* Vertices */}
     <div className="space-y-1">
-    <span className="map-field-label">Vertices (lat, lon)</span>
+    <span className="map-field-label">Coordinates (lat, lon)</span>
     <textarea
     rows={6}
     className="map-vertices-textarea"
@@ -480,6 +480,7 @@ return (
         }
     }}
     />
+    
     <button
     type="button"
     className="map-query-save-button"
@@ -487,8 +488,10 @@ return (
     >
     Save
     </button>
+    
     </div>
     </div>
+    
     
 
     
