@@ -60,7 +60,15 @@
         @apply relative;
         /* no font-size here; will inherit from parent (map panel or elsewhere) */
     }
-    
+    .date-input {
+        @apply bg-neutral-950 border border-neutral-700 text-neutral-100
+            focus:outline-none focus:ring-1 focus:ring-neutral-500;
+        padding: 0;        /* no padding: box just hugs the date text */
+        font-size: 1em;    /* inherits scale from parent (e.g. map-panel-root) */
+        line-height: 1.2;
+        width: 50%;
+  }
+
     .date-input-wrapper {
         @apply relative;
     }
@@ -206,7 +214,10 @@
     }
     
     .map-panel-root .map-time-window-grid {
-        @apply grid grid-cols-2 gap-2;
+        @apply grid grid-cols-3 gap-16;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        align-items: end;
+
     }
     
     .map-panel-root .map-panel-footer {
@@ -215,6 +226,8 @@
     
     .map-panel-root .map-select-area-button {
         @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
+        @apply w-auto;
+        /* @apply h-11; */
         font-size: 0.95em;
         padding: 0.45em 0.9em;
     }

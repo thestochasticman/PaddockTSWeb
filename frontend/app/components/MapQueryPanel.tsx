@@ -348,9 +348,9 @@ return (
     )}
     </div> */}
 
-          {/* Bounding box */}
+          {/* Bounding box
       <div className="space-y-1">
-        <div className="flex items-baseline gap-8">
+        <div className="flex items-center justify-between">
           <div className="map-field-label">Bounding box</div>
           <button
             type="button"
@@ -384,7 +384,7 @@ return (
             Draw a rectangle or provide vertices to define a region.
           </p>
         )}
-      </div>
+      </div> */}
     
     {/* Vertices */}
     <div className="space-y-1">
@@ -406,11 +406,29 @@ return (
     bounding box around it.
     </p>
     </div>
+
+    {/* Buffer */}
+    <div className="space-y-1">
+    <label className="map-field-label">Buffer (km)</label>
+    <input
+    type="number"
+    className="map-field-input"
+    value={bufferKm}
+    onChange={(e) => {
+        setBufferKm(e.target.value);
+        setSelectedQueryName(null);
+    }}
+    min="0"
+    step="0.1"
+    />
+    </div>
     
     {/* Time window */}
     <div className="space-y-2">
     {/* <span className="map-field-label">Time window</span> */}
+    
     <div className="map-time-window-grid">
+
     <MiniDatePicker
     label="Start"
     value={startDate}
@@ -431,29 +449,24 @@ return (
     }
     align="right"
     />
+             <button
+            type="button"
+            className="map-select-area-button"
+            onClick={handleSelectClick}
+          >
+            Select area
+          </button>
+    
     </div>
+
     </div>
     
-    {/* Buffer */}
-    <div className="space-y-1">
-    <label className="map-field-label">Buffer (km)</label>
-    <input
-    type="number"
-    className="map-field-input"
-    value={bufferKm}
-    onChange={(e) => {
-        setBufferKm(e.target.value);
-        setSelectedQueryName(null);
-    }}
-    min="0"
-    step="0.1"
-    />
-    </div>
+    
 
 
     {/* Query name + Save button */}
     <div className="space-y-1">
-    <label className="map-field-label">Query name</label>
+    <label className="map-field-label">Query Name(Optional)</label>
     <div className="map-query-name-row">
     <input
     type="text"
