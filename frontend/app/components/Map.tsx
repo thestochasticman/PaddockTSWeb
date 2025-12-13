@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect } from "react";
 import Script from "next/script";
 import { apiKey } from "./API";
@@ -6,11 +7,27 @@ import { apiKey } from "./API";
 export default function Map() {
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const w = window as any;
 
-    if (w.google && w.google.maps && typeof w.initMap === "function") {
-      w.initMap();
-    }
+    let cancelled = false;
+
+    const tryInit = () => {
+      if (cancelled) return;
+
+      const w = window as any;
+
+      if (w.google?.maps && typeof w.initMap === "function") {
+        w.initMap(); // idempotent (we’ll fix gmap_init.js below)
+        w.forceMapResize?.(); // optional helper we’ll add
+        return;
+      }
+
+      setTimeout(tryInit, 50);
+    };
+
+    tryInit();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!apiKey) {
@@ -23,17 +40,15 @@ export default function Map() {
 
   return (
     <>
-      {/* 1. custom Google Maps init script */}
-      <Script src="/gmap_init.js" strategy="afterInteractive" />
-
-      {/* 2. Load Google Maps JS API – will call window.initMap when ready */}
+      <Script id="gmap-init" src="/PaddockTS/gmap_init.js" strategy="afterInteractive" />
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing&callback=initMap`}
+        id="gmaps-api"
+        src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing`}
         strategy="afterInteractive"
       />
 
-      {/* 3. Map only – parent layout decides where this sits */}
-      <div id="map" className="w-full h-full" />
+      {/* fill parent reliably */}
+      <div id="map" className="absolute inset-0" />
     </>
   );
 }

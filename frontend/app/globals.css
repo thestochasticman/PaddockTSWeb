@@ -21,14 +21,24 @@
         @apply flex flex-1 min-h-0;
     }
     
-    .app-main-left {
+    /* .app-main-left {
         @apply w-[150px] border-r border-neutral-800;
     }
     
     .app-main-right {
         @apply flex-1 relative;
     }
-    
+     */
+
+     /* YOU USE app-left in JSX, so style app-left */
+    .app-left {
+    @apply min-h-0 shrink-0 overflow-hidden; /* map-panel-root controls width */
+    }
+
+    /* Right side needs min-h-0 and overflow hidden */
+    .app-main-right {
+    @apply flex-1 min-h-0 min-w-0 relative overflow-hidden;
+    }
     /* Toggle – no scaling, fixed text size */
     .toggle-root {
         @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[20px];
