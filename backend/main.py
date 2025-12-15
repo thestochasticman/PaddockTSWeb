@@ -1,5 +1,7 @@
+from PaddockTS.IndicesAndVegFrac.add_indices_and_veg_frac import add_indices_and_veg_frac
 from utils.latlon_and_deg_buffer_from_bbox import latlon_and_def_buffer_deg_from_bbox
 from utils.latlon_from_bbox_and_buffer import latlon_from_bbox_and_buffer
+from PaddockTS.Plotting.checkpoint_plots import plot as plot_checkpoints
 from PaddockTS.Data.environmental import download_environmental_data
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 from utils.PaddockTSWebQuery import PaddockTSWebQuery
@@ -19,6 +21,12 @@ from pathlib import Path
 import matplotlib
 import json
 import os
+
+def run_pipeline_paddock_indices_veg_frac_checkpoints(query: Query):
+    get_paddocks(query)
+    add_indices_and_veg_frac(query)
+    plot_checkpoints(query)
+    return 
 
 os.environ["MPLBACKEND"] = "Agg"
 matplotlib.use("Agg", force=True)
@@ -74,10 +82,10 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
     with open(meta_path, '+w') as file:
         json.dump(meta, file)
     # background_tasks.add_task(get_outputs, q2)
-    # background_tasks.add_task(get_paddocks, q2)
+    background_tasks.add_task(run_pipeline_paddock_indices_veg_frac_checkpoints, q2)
     # background_tasks.add_task(download_environmental_data, q2)
 
-    get_outputs(q2)
+    # get_outputs(q2)
     return RunResponse(job_id=job_id)
 
 @app.get("/results/{job_id}", response_model=ResultResponse)
