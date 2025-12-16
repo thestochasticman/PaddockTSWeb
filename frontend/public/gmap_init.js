@@ -1,5 +1,5 @@
 // public/PaddockTS/gmap_init.js
-// ES5-only (production-safe if any minifier/proxy is picky)
+// ES5-only (production-safe)
 
 (function () {
   "use strict";
