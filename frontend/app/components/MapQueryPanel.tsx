@@ -1,652 +1,3 @@
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
-
-// import MiniDatePicker from "./MiniDatePicker";
-// import { Selection } from "./Selection";
-// import { SavedQuery } from "./SavedQuery";
-// import {
-//     BASE,
-//     API,
-//     STORAGE_KEY,
-//     LATEST_JOB_STORAGE_KEY,
-// } from "./API";
-// import { BboxToVertices } from "./BboxToVertices";
-// import { VerticesToBbox } from "./VerticesToBBox";
-// import { VerticesStringToVertexList } from "./VerticesStringToVertexList";
-
-// type Status = "idle" | "running" | "done" | "error";
-
-// const DEFAULT_BBOX: Selection = {
-//     north: -33.0,
-//     south: -34.0,
-//     east: 149.0,
-//     west: 148.0,
-// };
-
-// const DEFAULT_VERTICES_TEXT = BboxToVertices(DEFAULT_BBOX);
-
-// // export function MapQueryPanel(
-// //     onBusyChange,) {
-
-// export function MapQueryPanel({
-//   onBusyChange,
-// }: {
-//   onBusyChange?: (busy: boolean) => void;
-// }) {
-//   // ... your existing state ...
-
-//   useEffect(() => {
-//     onBusyChange?.(status === "running");
-//     return () => onBusyChange?.(false); // safety on unmount/navigation
-//   }, [status, onBusyChange]);
-    
-//     const router = useRouter();
-//     const [selection, setSelection] = useState<Selection | null>(DEFAULT_BBOX);
-//     const [verticesText, setVerticesText] = useState(DEFAULT_VERTICES_TEXT);
-//     const [bufferKm, setBufferKm] = useState("1");
-//     const [startDate, setStartDate] = useState("2020-01-01");
-//     const [endDate, setEndDate] = useState("2020-12-31");
-//     const [openPicker, setOpenPicker] = useState<"start" | "end" | null>(null);
-    
-//     const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
-//     const [selectedQueryName, setSelectedQueryName] = useState<string | null>(null);
-//     const [loadedFromStorage, setLoadedFromStorage] = useState(false);
-    
-//     const [queryName, setQueryName] = useState<string>("");
-    
-//     const [status, setStatus] = useState<Status>("idle");
-//     const [jobId, setJobId] = useState<string | null>(null);
-//     const [error, setError] = useState<string | null>(null);
-//     const isBusy = status === "running";
-    
-//     const markQueryDirty = () => {
-//         setSelectedQueryName(null);
-//         setQueryName("");
-//     };
-    
-//     // --- Load saved queries ---
-//     useEffect(() => {
-//         if (typeof window === "undefined") return;
-        
-//         try {
-//             const raw = window.localStorage.getItem(STORAGE_KEY);
-//             if (!raw) {
-//                 setLoadedFromStorage(true);
-//                 return;
-//             }
-            
-//             const parsed = JSON.parse(raw);
-//             if (Array.isArray(parsed)) {
-//                 setSavedQueries(parsed as SavedQuery[]);
-//             } else {
-//                 console.warn("[MapQueryPanel] STORAGE_KEY value is not an array:", parsed);
-//             }
-//         } catch (e) {
-//             console.error("[MapQueryPanel] failed to parse saved queries:", e);
-//         } finally {
-//             setLoadedFromStorage(true);
-//         }
-//     }, []);
-    
-//     // --- Persist saved queries ---
-//     useEffect(() => {
-//         if (typeof window === "undefined") return;
-//         if (!loadedFromStorage) return;
-        
-//         try {
-//             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedQueries));
-//         } catch (e) {
-//             console.error("[MapQueryPanel] failed to write saved queries:", e);
-//         }
-//     }, [savedQueries, loadedFromStorage]);
-    
-//     // Map → React (bbox-selected)
-//     useEffect(() => {
-//         function handleBboxSelected(event: Event) {
-//             const e = event as CustomEvent<Selection>;
-//             const bbox = e.detail;
-//             setSelection(bbox);
-//             setVerticesText(BboxToVertices(bbox));
-//             setSelectedQueryName(null);
-//             markQueryDirty();
-//         }
-        
-//         window.addEventListener("bbox-selected", handleBboxSelected as EventListener);
-//         return () => {
-//             window.removeEventListener("bbox-selected", handleBboxSelected as EventListener);
-//         };
-//     }, []);
-    
-//     // Vertices / buffer → selection
-//     useEffect(() => {
-//         if (!verticesText.trim()) return;
-//         const parsed = VerticesToBbox(verticesText, bufferKm);
-//         if (!parsed) return;
-//         setSelection(parsed);
-//         setSelectedQueryName(null);
-//     }, [verticesText, bufferKm]);
-    
-//     // selection → Map
-//     useEffect(() => {
-//         if (!selection) return;
-//         const w = window as any;
-//         if (typeof w.setBoundingBoxFromReact === "function") {
-//             w.setBoundingBoxFromReact(
-//                 selection.north,
-//                 selection.south,
-//                 selection.east,
-//                 selection.west
-//             );
-//         }
-//     }, [selection]);
-    
-//     // Poll job status
-//     useEffect(() => {
-//         if (status !== "running" || !jobId) return;
-//         const interval = setInterval(async () => {
-//             try {
-//                 const res = await fetch(`${API}/results/${jobId}`);
-//                 if (res.ok) {
-//                     const data = await res.json();
-//                     if (data.status === "done") {
-//                         setStatus("done");
-//                         if (typeof window !== "undefined") {
-//                             window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, jobId);
-//                         }
-//                         router.push(`/results/${jobId}`);
-//                     }
-//                 }
-//             } catch {
-//                 // ignore
-//             }
-//         }, 4000);
-//         return () => clearInterval(interval);
-//     }, [status, jobId, router]);
-    
-//     const handleSelectClick = () => {
-//         const w = window as any;
-//         if (w.enableRectangleSelection) {
-//             w.enableRectangleSelection();
-//         }
-//     };
-    
-//     // --- Save current setup as a named query ---
-// //     const handleSaveCurrent = () => {
-// //         const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
-// //         if (!bbox) {
-// //             window.alert("Please provide at least one valid coordinate before saving.");
-// //             return;
-// //         }
-        
-// //         const trimmedName = queryName.trim();
-// //         if (!trimmedName) {
-// //             window.alert("Please enter a name for the query before saving.");
-// //             return;
-// //         }
-        
-// //         const finalName = trimmedName;
-        
-// //         if (selectedQueryName) {
-// //             // Update existing (by previously selected name)
-// //             setSavedQueries((prev) =>
-// //                 prev.map((sq) =>
-// //                     sq.name === selectedQueryName
-// //             ? {
-// //                 ...sq,
-// //                 name: finalName,
-// //                 bbox,
-// //                 verticesText,
-// //                 startDate,
-// //                 endDate,
-// //             }
-// //             : sq
-// //         )
-// //     );
-// // } else {
-// //     // Create new
-// //     const newQuery: SavedQuery = {
-// //         name: finalName,
-// //         bbox,
-// //         verticesText,
-// //         startDate,
-// //         endDate,
-// //     };
-    
-// //     setSavedQueries((prev) => [newQuery, ...prev]);
-// // }
-
-// // setSelectedQueryName(finalName);
-// // setQueryName(finalName);
-// // };
-
-// const handleSaveCurrent = () => {
-//   const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
-//   if (!bbox) {
-//     window.alert("Please provide at least one valid coordinate before saving.");
-//     return;
-//   }
-
-//   const trimmedName = queryName.trim();
-//   if (!trimmedName) {
-//     window.alert("Please enter a name for the query before saving.");
-//     return;
-//   }
-
-//   const finalName = trimmedName;
-
-//   // Disallow duplicate names
-//   const existing = savedQueries.find((sq) => sq.name === finalName);
-
-//   if (!selectedQueryName) {
-//     // Creating a NEW query – block if name already exists
-//     if (existing) {
-//       window.alert("A query with this name already exists. Please choose a different name.");
-//       return;
-//     }
-//   } else {
-//     // Updating an EXISTING query – block if renaming to another existing name
-//     if (finalName !== selectedQueryName && existing) {
-//       window.alert("Another query with this name already exists. Please choose a different name.");
-//       return;
-//     }
-//   }
-
-//   if (selectedQueryName) {
-//     // Update existing (by previously selected name)
-//     setSavedQueries((prev) =>
-//       prev.map((sq) =>
-//         sq.name === selectedQueryName
-//           ? {
-//               ...sq,
-//               name: finalName,
-//               bbox,
-//               verticesText,
-//               startDate,
-//               endDate,
-//             }
-//           : sq
-//       )
-//     );
-//   } else {
-//     // Create new
-//     const newQuery: SavedQuery = {
-//       name: finalName,
-//       bbox,
-//       verticesText,
-//       startDate,
-//       endDate,
-//     };
-
-//     setSavedQueries((prev) => [newQuery, ...prev]);
-//   }
-
-//   setSelectedQueryName(finalName);
-//   setQueryName(finalName);
-// };
-
-// // Select a saved query from the list (by name)
-// const handleSelectSavedQuery = (name: string) => {
-//     const q = savedQueries.find((sq) => sq.name === name);
-//     if (!q) return;
-    
-//     setSelectedQueryName(q.name);
-//     setQueryName(q.name);
-//     setVerticesText(q.verticesText);
-//     setStartDate(q.startDate);
-//     setEndDate(q.endDate);
-//     setSelection(q.bbox);
-//     setOpenPicker(null);
-// };
-
-// // delete a saved query
-// const handleDeleteSavedQuery = (name: string) => {
-//     setSavedQueries((prev) => prev.filter((sq) => sq.name !== name));
-//     if (selectedQueryName === name) {
-//         setSelectedQueryName(null);
-//         setQueryName("");
-//     }
-// };
-
-// const handleStartDateChange = (value: string) => {
-//     setStartDate(value);
-//     setSelectedQueryName(null);
-//     markQueryDirty();
-// };
-
-// const handleEndDateChange = (value: string) => {
-//     setEndDate(value);
-//     setSelectedQueryName(null);
-//     markQueryDirty();
-// };
-
-// async function handleRun() {
-//     if (!selection) {
-//         window.alert("Please define a region first.");
-//         return;
-//     }
-    
-//     setStatus("running");
-//     setError(null);
-    
-//     const vertexList = VerticesStringToVertexList(verticesText);
-    
-//     let bboxArray: [number, number, number, number] | null = null;
-//     if (selection) {
-//         bboxArray = [
-//             selection.south,
-//             selection.west,
-//             selection.north,
-//             selection.east,
-//         ];
-//     } else {
-//         const bbox = VerticesToBbox(verticesText, bufferKm);
-//         if (bbox) {
-//             bboxArray = [bbox.south, bbox.west, bbox.north, bbox.east];
-//         }
-//     }
-    
-//     if (!bboxArray) {
-//         window.alert("Could not infer a bounding box from the vertices.");
-//         return;
-//     }
-    
-//     try {
-//         const body = {
-//             vertices: vertexList,
-//             bbox: bboxArray,
-//             buffer_km: Number(bufferKm),
-//             start_date: startDate,
-//             end_date: endDate,
-//         };
-        
-//         const res = await fetch(`${BASE}/run`, {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify(body),
-//         });
-        
-//         if (!res.ok) throw new Error(await res.text());
-//         const json = await res.json();
-//         const newJobId = json.job_id ?? json.jobId;
-        
-//         if (!newJobId) {
-//             throw new Error("Backend did not return a job id");
-//         }
-        
-//         setJobId(newJobId);
-//         setStatus("running");
-        
-//         if (typeof window !== "undefined") {
-//             window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, newJobId);
-//         }
-//     } catch (err: any) {
-//         console.error(err);
-//         setError(err.message || "Run failed");
-//         setStatus("error");
-//     }
-// }
-
-
-
-
-
-
-
-// return (
-//     <div className="map-panel-root">
-    
-//     {/* Bounding box
-//     <div className="space-y-1">
-//     <div className="map-field-label">Bounding box
-//     <button
-//             type="button"
-//             className="map-select-area-button"
-//             onClick={handleSelectClick}
-//           >
-//             Select area
-//           </button>
-//     </div>
-//     {selection ? (
-//         <ul className="map-bbox-list">
-//         <li className="map-bbox-row">
-//         <span className="map-bbox-label">N</span>
-//         <span>{selection.north.toFixed(4)}</span>
-//         </li>
-//         <li className="map-bbox-row">
-//         <span className="map-bbox-label">S</span>
-//         <span>{selection.south.toFixed(4)}</span>
-//         </li>
-//         <li className="map-bbox-row">
-//         <span className="map-bbox-label">W</span>
-//         <span>{selection.west.toFixed(4)}</span>
-//         </li>
-//         <li className="map-bbox-row">
-//         <span className="map-bbox-label">E</span>
-//         <span>{selection.east.toFixed(4)}</span>
-//         </li>
-//         </ul>
-//     ) : (
-//         <p className="map-bbox-empty">
-//         Draw a rectangle or provide vertices to define a region.
-//         </p>
-//     )}
-//     </div> */}
-
-//           {/* Bounding box
-//       <div className="space-y-1">
-//         <div className="flex items-center justify-between">
-//           <div className="map-field-label">Bounding box</div>
-//           <button
-//             type="button"
-//             className="map-select-area-button"
-//             onClick={handleSelectClick}
-//           >
-//             Select area
-//           </button>
-//         </div>
-//         {selection ? (
-//           <ul className="map-bbox-list">
-//             <li className="map-bbox-row">
-//               <span className="map-bbox-label">N</span>
-//               <span>{selection.north.toFixed(4)}</span>
-//             </li>
-//             <li className="map-bbox-row">
-//               <span className="map-bbox-label">S</span>
-//               <span>{selection.south.toFixed(4)}</span>
-//             </li>
-//             <li className="map-bbox-row">
-//               <span className="map-bbox-label">W</span>
-//               <span>{selection.west.toFixed(4)}</span>
-//             </li>
-//             <li className="map-bbox-row">
-//               <span className="map-bbox-label">E</span>
-//               <span>{selection.east.toFixed(4)}</span>
-//             </li>
-//           </ul>
-//         ) : (
-//           <p className="map-bbox-empty">
-//             Draw a rectangle or provide vertices to define a region.
-//           </p>
-//         )}
-//       </div> */}
-    
-//     {/* Vertices */}
-//     <div className="space-y-1">
-//     <span className="map-field-label">Coordinates (lat, lon)</span>
-//     <textarea
-//     rows={6}
-//     className="map-vertices-textarea"
-//     placeholder={`lat, lon\nlat, lon\nlat, lon\nlat, lon`}
-//     value={verticesText}
-//     onChange={(e) => {
-//         setVerticesText(e.target.value);
-//         setSelectedQueryName(null);
-//         markQueryDirty();
-//     }}
-//     />
-//     <p className="map-vertices-help">
-//     Draw a rectangle to auto-fill these vertices, or paste your own list.
-//     If you enter a single coordinate, the buffer (km) is used to create a
-//     bounding box around it.
-//     </p>
-//     </div>
-
-//     {/* Buffer */}
-//     <div className="space-y-1">
-//     <label className="map-field-label">Buffer (km)</label>
-//     <input
-//     type="number"
-//     className="map-field-input"
-//     value={bufferKm}
-//     onChange={(e) => {
-//         setBufferKm(e.target.value);
-//         setSelectedQueryName(null);
-//     }}
-//     min="0"
-//     step="0.1"
-//     />
-//     </div>
-    
-//     {/* Time window */}
-//     <div className="space-y-2">
-//     {/* <span className="map-field-label">Time window</span> */}
-    
-//     <div className="map-time-window-grid">
-
-//     <MiniDatePicker
-//     label="Start"
-//     value={startDate}
-//     onChange={handleStartDateChange}
-//     isOpen={openPicker === "start"}
-//     onToggle={() =>
-//         setOpenPicker((prev) => (prev === "start" ? null : "start"))
-//     }
-//     align="left"
-//     />
-//     <MiniDatePicker
-//     label="End"
-//     value={endDate}
-//     onChange={handleEndDateChange}
-//     isOpen={openPicker === "end"}
-//     onToggle={() =>
-//         setOpenPicker((prev) => (prev === "end" ? null : "end"))
-//     }
-//     align="right"
-//     />
-//              <button
-//             type="button"
-//             className="map-select-area-button"
-//             onClick={handleSelectClick}
-//           >
-//             Select area
-//           </button>
-    
-//     </div>
-
-//     </div>
-    
-    
-
-
-//     {/* Query name + Save button */}
-//     <div className="space-y-2">
-//     <label className="map-field-label">Query Name(Optional)</label>
-//     <div className="map-query-name-row">
-//     <input
-//     type="text"
-//     className="map-query-name-input"
-//     placeholder="Enter Query Name"
-//     value={queryName}
-//     onChange={(e) => {
-//         setQueryName(e.target.value);
-//         if (selectedQueryName) {
-//             setSelectedQueryName(null);
-//         }
-//     }}
-//     />
-    
-    
-//     <button
-//     type="button"
-//     className="map-query-save-button"
-//     onClick={handleSaveCurrent}
-//     >
-//     Save
-//     </button>
-
-//      <button
-//     type="button"
-//     disabled={status === "running"}
-//     className={[
-//         "map-run-button",
-//         status === "running"
-//         ? "map-run-button--running"
-//         : "map-run-button--idle",
-//     ].join(" ")}
-//     onClick={handleRun}
-//     >
-//     {status === "running" ? "Running…" : "Run"}
-//     </button>
-    
-//     </div>
-//     </div>
-
-    
-//     {/* Saved queries – directly below buttons */}
-//     <div className="map-saved-queries-section">
-//     <div className="map-saved-queries-header">
-//     <span className="map-field-label">Saved queries</span>
-//     <span className="map-saved-queries-count">
-//     {savedQueries.length} total
-//     </span>
-//     </div>
-//     <div className="map-saved-queries-container">
-//     {savedQueries.length === 0 ? (
-//         <div className="map-saved-queries-empty">
-//         No saved queries yet. Configure a region and dates, give it a name,
-//         then press Save.
-//         </div>
-//     ) : (
-//         <ul className="map-saved-queries-list">
-//         {savedQueries.map((q) => (
-//             <li key={q.name} className="map-saved-query-row">
-//             <button
-//             type="button"
-//             className={[
-//                 "map-saved-query-button",
-//                 q.name === selectedQueryName
-//                 ? "map-saved-query-button--selected"
-//                 : "",
-//             ].join(" ")}
-//             onClick={() => handleSelectSavedQuery(q.name)}
-//             >
-//             <div className="map-saved-query-name">{q.name}</div>
-//             </button>
-//             <button
-//             type="button"
-//             className="map-saved-query-delete"
-//             onClick={(e) => {
-//                 e.stopPropagation();
-//                 handleDeleteSavedQuery(q.name);
-//             }}
-//             aria-label="Delete saved query"
-//             title="Delete"
-//             >
-//             ×
-//             </button>
-//             </li>
-//         ))}
-//         </ul>
-//     )}
-//     </div>
-//     </div>
-//     </div>
-// );
-// }
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -655,7 +6,12 @@ import { useRouter } from "next/navigation";
 import MiniDatePicker from "./MiniDatePicker";
 import { Selection } from "./Selection";
 import { SavedQuery } from "./SavedQuery";
-import { BASE, API, STORAGE_KEY, LATEST_JOB_STORAGE_KEY } from "./API";
+import {
+    BASE,
+    API,
+    STORAGE_KEY,
+    LATEST_JOB_STORAGE_KEY,
+} from "./API";
 import { BboxToVertices } from "./BboxToVertices";
 import { VerticesToBbox } from "./VerticesToBBox";
 import { VerticesStringToVertexList } from "./VerticesStringToVertexList";
@@ -671,54 +27,41 @@ const DEFAULT_BBOX: Selection = {
 
 const DEFAULT_VERTICES_TEXT = BboxToVertices(DEFAULT_BBOX);
 
-export function MapQueryPanel({
-    onBusyChange,
-}: {
-    onBusyChange?: (busy: boolean) => void;
-}) {
+export function MapQueryPanel() {
     const router = useRouter();
-
     const [selection, setSelection] = useState<Selection | null>(DEFAULT_BBOX);
     const [verticesText, setVerticesText] = useState(DEFAULT_VERTICES_TEXT);
     const [bufferKm, setBufferKm] = useState("1");
     const [startDate, setStartDate] = useState("2020-01-01");
     const [endDate, setEndDate] = useState("2020-12-31");
     const [openPicker, setOpenPicker] = useState<"start" | "end" | null>(null);
-
+    
     const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
     const [selectedQueryName, setSelectedQueryName] = useState<string | null>(null);
     const [loadedFromStorage, setLoadedFromStorage] = useState(false);
-
+    
     const [queryName, setQueryName] = useState<string>("");
-
+    
     const [status, setStatus] = useState<Status>("idle");
     const [jobId, setJobId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-
-    const isBusy = status === "running";
-
+    
     const markQueryDirty = () => {
         setSelectedQueryName(null);
         setQueryName("");
     };
-
-    // Tell parent (page) when we enter/exit running state
-    useEffect(() => {
-        onBusyChange?.(isBusy);
-        return () => onBusyChange?.(false); // safety on unmount/navigation
-    }, [isBusy, onBusyChange]);
-
+    
     // --- Load saved queries ---
     useEffect(() => {
         if (typeof window === "undefined") return;
-
+        
         try {
             const raw = window.localStorage.getItem(STORAGE_KEY);
             if (!raw) {
                 setLoadedFromStorage(true);
                 return;
             }
-
+            
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
                 setSavedQueries(parsed as SavedQuery[]);
@@ -731,436 +74,553 @@ export function MapQueryPanel({
             setLoadedFromStorage(true);
         }
     }, []);
-
+    
     // --- Persist saved queries ---
     useEffect(() => {
         if (typeof window === "undefined") return;
         if (!loadedFromStorage) return;
-
+        
         try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedQueries));
         } catch (e) {
             console.error("[MapQueryPanel] failed to write saved queries:", e);
         }
     }, [savedQueries, loadedFromStorage]);
-
+    
     // Map → React (bbox-selected)
     useEffect(() => {
         function handleBboxSelected(event: Event) {
-            if (isBusy) return;
-
             const e = event as CustomEvent<Selection>;
             const bbox = e.detail;
-
             setSelection(bbox);
             setVerticesText(BboxToVertices(bbox));
             setSelectedQueryName(null);
             markQueryDirty();
         }
-
+        
         window.addEventListener("bbox-selected", handleBboxSelected as EventListener);
         return () => {
             window.removeEventListener("bbox-selected", handleBboxSelected as EventListener);
         };
-    }, [isBusy]);
-
+    }, []);
+    
     // Vertices / buffer → selection
     useEffect(() => {
-        if (isBusy) return;
         if (!verticesText.trim()) return;
-
         const parsed = VerticesToBbox(verticesText, bufferKm);
         if (!parsed) return;
-
         setSelection(parsed);
         setSelectedQueryName(null);
-    }, [verticesText, bufferKm, isBusy]);
-
+    }, [verticesText, bufferKm]);
+    
     // selection → Map
     useEffect(() => {
         if (!selection) return;
-
         const w = window as any;
         if (typeof w.setBoundingBoxFromReact === "function") {
-            w.setBoundingBoxFromReact(selection.north, selection.south, selection.east, selection.west);
+            w.setBoundingBoxFromReact(
+                selection.north,
+                selection.south,
+                selection.east,
+                selection.west
+            );
         }
     }, [selection]);
-
+    
     // Poll job status
     useEffect(() => {
         if (status !== "running" || !jobId) return;
-
         const interval = setInterval(async () => {
             try {
                 const res = await fetch(`${API}/results/${jobId}`);
-                if (!res.ok) return;
-
-                const data = await res.json();
-                if (data.status === "done") {
-                    setStatus("done");
-
-                    if (typeof window !== "undefined") {
-                        window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, jobId);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === "done") {
+                        setStatus("done");
+                        if (typeof window !== "undefined") {
+                            window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, jobId);
+                        }
+                        router.push(`/results/${jobId}`);
                     }
-
-                    router.push(`/results/${jobId}`);
                 }
             } catch {
                 // ignore
             }
         }, 4000);
-
         return () => clearInterval(interval);
     }, [status, jobId, router]);
-
+    
     const handleSelectClick = () => {
-        if (isBusy) return;
         const w = window as any;
-        if (w.enableRectangleSelection) w.enableRectangleSelection();
+        if (w.enableRectangleSelection) {
+            w.enableRectangleSelection();
+        }
     };
+    
+    // --- Save current setup as a named query ---
+//     const handleSaveCurrent = () => {
+//         const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
+//         if (!bbox) {
+//             window.alert("Please provide at least one valid coordinate before saving.");
+//             return;
+//         }
+        
+//         const trimmedName = queryName.trim();
+//         if (!trimmedName) {
+//             window.alert("Please enter a name for the query before saving.");
+//             return;
+//         }
+        
+//         const finalName = trimmedName;
+        
+//         if (selectedQueryName) {
+//             // Update existing (by previously selected name)
+//             setSavedQueries((prev) =>
+//                 prev.map((sq) =>
+//                     sq.name === selectedQueryName
+//             ? {
+//                 ...sq,
+//                 name: finalName,
+//                 bbox,
+//                 verticesText,
+//                 startDate,
+//                 endDate,
+//             }
+//             : sq
+//         )
+//     );
+// } else {
+//     // Create new
+//     const newQuery: SavedQuery = {
+//         name: finalName,
+//         bbox,
+//         verticesText,
+//         startDate,
+//         endDate,
+//     };
+    
+//     setSavedQueries((prev) => [newQuery, ...prev]);
+// }
 
-    const handleSaveCurrent = () => {
-        if (isBusy) return;
+// setSelectedQueryName(finalName);
+// setQueryName(finalName);
+// };
 
-        const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
-        if (!bbox) {
-            window.alert("Please provide at least one valid coordinate before saving.");
-            return;
-        }
+const handleSaveCurrent = () => {
+  const bbox = selection ?? VerticesToBbox(verticesText, bufferKm);
+  if (!bbox) {
+    window.alert("Please provide at least one valid coordinate before saving.");
+    return;
+  }
 
-        const trimmedName = queryName.trim();
-        if (!trimmedName) {
-            window.alert("Please enter a name for the query before saving.");
-            return;
-        }
+  const trimmedName = queryName.trim();
+  if (!trimmedName) {
+    window.alert("Please enter a name for the query before saving.");
+    return;
+  }
 
-        const finalName = trimmedName;
+  const finalName = trimmedName;
 
-        // Disallow duplicate names
-        const existing = savedQueries.find((sq) => sq.name === finalName);
+  // Disallow duplicate names
+  const existing = savedQueries.find((sq) => sq.name === finalName);
 
-        if (!selectedQueryName) {
-            // Creating a NEW query – block if name already exists
-            if (existing) {
-                window.alert("A query with this name already exists. Please choose a different name.");
-                return;
+  if (!selectedQueryName) {
+    // Creating a NEW query – block if name already exists
+    if (existing) {
+      window.alert("A query with this name already exists. Please choose a different name.");
+      return;
+    }
+  } else {
+    // Updating an EXISTING query – block if renaming to another existing name
+    if (finalName !== selectedQueryName && existing) {
+      window.alert("Another query with this name already exists. Please choose a different name.");
+      return;
+    }
+  }
+
+  if (selectedQueryName) {
+    // Update existing (by previously selected name)
+    setSavedQueries((prev) =>
+      prev.map((sq) =>
+        sq.name === selectedQueryName
+          ? {
+              ...sq,
+              name: finalName,
+              bbox,
+              verticesText,
+              startDate,
+              endDate,
             }
-        } else {
-            // Updating an EXISTING query – block if renaming to another existing name
-            if (finalName !== selectedQueryName && existing) {
-                window.alert("Another query with this name already exists. Please choose a different name.");
-                return;
-            }
-        }
-
-        if (selectedQueryName) {
-            // Update existing (by previously selected name)
-            setSavedQueries((prev) =>
-                prev.map((sq) =>
-                    sq.name === selectedQueryName
-                        ? {
-                              ...sq,
-                              name: finalName,
-                              bbox,
-                              verticesText,
-                              startDate,
-                              endDate,
-                          }
-                        : sq
-                )
-            );
-        } else {
-            // Create new
-            const newQuery: SavedQuery = {
-                name: finalName,
-                bbox,
-                verticesText,
-                startDate,
-                endDate,
-            };
-
-            setSavedQueries((prev) => [newQuery, ...prev]);
-        }
-
-        setSelectedQueryName(finalName);
-        setQueryName(finalName);
+          : sq
+      )
+    );
+  } else {
+    // Create new
+    const newQuery: SavedQuery = {
+      name: finalName,
+      bbox,
+      verticesText,
+      startDate,
+      endDate,
     };
 
-    // Select a saved query from the list (by name)
-    const handleSelectSavedQuery = (name: string) => {
-        if (isBusy) return;
+    setSavedQueries((prev) => [newQuery, ...prev]);
+  }
 
-        const q = savedQueries.find((sq) => sq.name === name);
-        if (!q) return;
+  setSelectedQueryName(finalName);
+  setQueryName(finalName);
+};
 
-        setSelectedQueryName(q.name);
-        setQueryName(q.name);
-        setVerticesText(q.verticesText);
-        setStartDate(q.startDate);
-        setEndDate(q.endDate);
-        setSelection(q.bbox);
-        setOpenPicker(null);
-    };
+// Select a saved query from the list (by name)
+const handleSelectSavedQuery = (name: string) => {
+    const q = savedQueries.find((sq) => sq.name === name);
+    if (!q) return;
+    
+    setSelectedQueryName(q.name);
+    setQueryName(q.name);
+    setVerticesText(q.verticesText);
+    setStartDate(q.startDate);
+    setEndDate(q.endDate);
+    setSelection(q.bbox);
+    setOpenPicker(null);
+};
 
-    // delete a saved query
-    const handleDeleteSavedQuery = (name: string) => {
-        if (isBusy) return;
-
-        setSavedQueries((prev) => prev.filter((sq) => sq.name !== name));
-        if (selectedQueryName === name) {
-            setSelectedQueryName(null);
-            setQueryName("");
-        }
-    };
-
-    const handleStartDateChange = (value: string) => {
-        if (isBusy) return;
-        setStartDate(value);
+// delete a saved query
+const handleDeleteSavedQuery = (name: string) => {
+    setSavedQueries((prev) => prev.filter((sq) => sq.name !== name));
+    if (selectedQueryName === name) {
         setSelectedQueryName(null);
-        markQueryDirty();
-    };
+        setQueryName("");
+    }
+};
 
-    const handleEndDateChange = (value: string) => {
-        if (isBusy) return;
-        setEndDate(value);
-        setSelectedQueryName(null);
-        markQueryDirty();
-    };
+const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    setSelectedQueryName(null);
+    markQueryDirty();
+};
 
-    async function handleRun() {
-        if (isBusy) return;
+const handleEndDateChange = (value: string) => {
+    setEndDate(value);
+    setSelectedQueryName(null);
+    markQueryDirty();
+};
 
-        if (!selection) {
-            window.alert("Please define a region first.");
-            return;
-        }
-
-        setOpenPicker(null);
-        if (typeof document !== "undefined") {
-            (document.activeElement as HTMLElement | null)?.blur();
-        }
-
-        setStatus("running");
-        setError(null);
-
-        const vertexList = VerticesStringToVertexList(verticesText);
-
-        let bboxArray: [number, number, number, number] | null = null;
-        if (selection) {
-            bboxArray = [selection.south, selection.west, selection.north, selection.east];
-        } else {
-            const bbox = VerticesToBbox(verticesText, bufferKm);
-            if (bbox) bboxArray = [bbox.south, bbox.west, bbox.north, bbox.east];
-        }
-
-        if (!bboxArray) {
-            window.alert("Could not infer a bounding box from the vertices.");
-            setStatus("error");
-            return;
-        }
-
-        try {
-            const body = {
-                vertices: vertexList,
-                bbox: bboxArray,
-                buffer_km: Number(bufferKm),
-                start_date: startDate,
-                end_date: endDate,
-            };
-
-            const res = await fetch(`${BASE}/run`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-
-            if (!res.ok) throw new Error(await res.text());
-
-            const json = await res.json();
-            const newJobId = json.job_id ?? json.jobId;
-
-            if (!newJobId) throw new Error("Backend did not return a job id");
-
-            setJobId(newJobId);
-            setStatus("running");
-
-            if (typeof window !== "undefined") {
-                window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, newJobId);
-            }
-        } catch (err: any) {
-            console.error(err);
-            setError(err.message || "Run failed");
-            setStatus("error");
+async function handleRun() {
+    if (!selection) {
+        window.alert("Please define a region first.");
+        return;
+    }
+    
+    setStatus("running");
+    setError(null);
+    
+    const vertexList = VerticesStringToVertexList(verticesText);
+    
+    let bboxArray: [number, number, number, number] | null = null;
+    if (selection) {
+        bboxArray = [
+            selection.south,
+            selection.west,
+            selection.north,
+            selection.east,
+        ];
+    } else {
+        const bbox = VerticesToBbox(verticesText, bufferKm);
+        if (bbox) {
+            bboxArray = [bbox.south, bbox.west, bbox.north, bbox.east];
         }
     }
+    
+    if (!bboxArray) {
+        window.alert("Could not infer a bounding box from the vertices.");
+        return;
+    }
+    
+    try {
+        const body = {
+            vertices: vertexList,
+            bbox: bboxArray,
+            buffer_km: Number(bufferKm),
+            start_date: startDate,
+            end_date: endDate,
+        };
+        
+        const res = await fetch(`${BASE}/run`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        
+        if (!res.ok) throw new Error(await res.text());
+        const json = await res.json();
+        const newJobId = json.job_id ?? json.jobId;
+        
+        if (!newJobId) {
+            throw new Error("Backend did not return a job id");
+        }
+        
+        setJobId(newJobId);
+        setStatus("running");
+        
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, newJobId);
+        }
+    } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Run failed");
+        setStatus("error");
+    }
+}
 
-    return (
-        <div className="map-panel-root">
-            {/* Vertices */}
-            <div className="space-y-1">
-                <span className="map-field-label">Coordinates (lat, lon)</span>
-                <textarea
-                    rows={6}
-                    className="map-vertices-textarea"
-                    placeholder={`lat, lon\nlat, lon\nlat, lon\nlat, lon`}
-                    value={verticesText}
-                    disabled={isBusy}
-                    onChange={(e) => {
-                        if (isBusy) return;
-                        setVerticesText(e.target.value);
-                        setSelectedQueryName(null);
-                        markQueryDirty();
-                    }}
-                />
-                <p className="map-vertices-help">
-                    Draw a rectangle to auto-fill these vertices, or paste your own list. If you enter a single
-                    coordinate, the buffer (km) is used to create a bounding box around it.
-                </p>
-            </div>
+return (
+    <div className="map-panel-root">
+    
+    {/* Bounding box
+    <div className="space-y-1">
+    <div className="map-field-label">Bounding box
+    <button
+            type="button"
+            className="map-select-area-button"
+            onClick={handleSelectClick}
+          >
+            Select area
+          </button>
+    </div>
+    {selection ? (
+        <ul className="map-bbox-list">
+        <li className="map-bbox-row">
+        <span className="map-bbox-label">N</span>
+        <span>{selection.north.toFixed(4)}</span>
+        </li>
+        <li className="map-bbox-row">
+        <span className="map-bbox-label">S</span>
+        <span>{selection.south.toFixed(4)}</span>
+        </li>
+        <li className="map-bbox-row">
+        <span className="map-bbox-label">W</span>
+        <span>{selection.west.toFixed(4)}</span>
+        </li>
+        <li className="map-bbox-row">
+        <span className="map-bbox-label">E</span>
+        <span>{selection.east.toFixed(4)}</span>
+        </li>
+        </ul>
+    ) : (
+        <p className="map-bbox-empty">
+        Draw a rectangle or provide vertices to define a region.
+        </p>
+    )}
+    </div> */}
 
-            {/* Buffer */}
-            <div className="space-y-1">
-                <label className="map-field-label">Buffer (km)</label>
-                <input
-                    type="number"
-                    className="map-field-input"
-                    value={bufferKm}
-                    disabled={isBusy}
-                    onChange={(e) => {
-                        if (isBusy) return;
-                        setBufferKm(e.target.value);
-                        setSelectedQueryName(null);
-                    }}
-                    min="0"
-                    step="0.1"
-                />
-            </div>
-
-            {/* Time window */}
-            <div className="space-y-2">
-                <div className="map-time-window-grid">
-                    <MiniDatePicker
-                        label="Start"
-                        value={startDate}
-                        onChange={handleStartDateChange}
-                        isOpen={openPicker === "start"}
-                        onToggle={() => {
-                            if (isBusy) return;
-                            setOpenPicker((prev) => (prev === "start" ? null : "start"));
-                        }}
-                        align="left"
-                    />
-                    <MiniDatePicker
-                        label="End"
-                        value={endDate}
-                        onChange={handleEndDateChange}
-                        isOpen={openPicker === "end"}
-                        onToggle={() => {
-                            if (isBusy) return;
-                            setOpenPicker((prev) => (prev === "end" ? null : "end"));
-                        }}
-                        align="right"
-                    />
-                    <button
-                        type="button"
-                        className="map-select-area-button"
-                        onClick={handleSelectClick}
-                        disabled={isBusy}
-                    >
-                        Select area
-                    </button>
-                </div>
-            </div>
-
-            {/* Query name + Save button + Run */}
-            <div className="space-y-2">
-                <label className="map-field-label">Query Name(Optional)</label>
-                <div className="map-query-name-row">
-                    <input
-                        type="text"
-                        className="map-query-name-input"
-                        placeholder="Enter Query Name"
-                        value={queryName}
-                        disabled={isBusy}
-                        onChange={(e) => {
-                            if (isBusy) return;
-                            setQueryName(e.target.value);
-                            if (selectedQueryName) setSelectedQueryName(null);
-                        }}
-                    />
-
-                    <button
-                        type="button"
-                        className="map-query-save-button"
-                        onClick={handleSaveCurrent}
-                        disabled={isBusy}
-                    >
-                        Save
-                    </button>
-
-                    <button
-                        type="button"
-                        disabled={isBusy}
-                        className={[
-                            "map-run-button",
-                            isBusy ? "map-run-button--running" : "map-run-button--idle",
-                        ].join(" ")}
-                        onClick={handleRun}
-                    >
-                        {isBusy ? "Running…" : "Run"}
-                    </button>
-                </div>
-
-                {error ? <div className="text-sm text-red-400">{error}</div> : null}
-            </div>
-
-            {/* Saved queries */}
-            <div className="map-saved-queries-section">
-                <div className="map-saved-queries-header">
-                    <span className="map-field-label">Saved queries</span>
-                    <span className="map-saved-queries-count">{savedQueries.length} total</span>
-                </div>
-
-                <div className="map-saved-queries-container">
-                    {savedQueries.length === 0 ? (
-                        <div className="map-saved-queries-empty">
-                            No saved queries yet. Configure a region and dates, give it a name, then press Save.
-                        </div>
-                    ) : (
-                        <ul className="map-saved-queries-list">
-                            {savedQueries.map((q) => (
-                                <li key={q.name} className="map-saved-query-row">
-                                    <button
-                                        type="button"
-                                        disabled={isBusy}
-                                        className={[
-                                            "map-saved-query-button",
-                                            q.name === selectedQueryName ? "map-saved-query-button--selected" : "",
-                                        ].join(" ")}
-                                        onClick={() => handleSelectSavedQuery(q.name)}
-                                    >
-                                        <div className="map-saved-query-name">{q.name}</div>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        disabled={isBusy}
-                                        className="map-saved-query-delete"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteSavedQuery(q.name);
-                                        }}
-                                        aria-label="Delete saved query"
-                                        title="Delete"
-                                    >
-                                        ×
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </div>
+          {/* Bounding box
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <div className="map-field-label">Bounding box</div>
+          <button
+            type="button"
+            className="map-select-area-button"
+            onClick={handleSelectClick}
+          >
+            Select area
+          </button>
         </div>
-    );
+        {selection ? (
+          <ul className="map-bbox-list">
+            <li className="map-bbox-row">
+              <span className="map-bbox-label">N</span>
+              <span>{selection.north.toFixed(4)}</span>
+            </li>
+            <li className="map-bbox-row">
+              <span className="map-bbox-label">S</span>
+              <span>{selection.south.toFixed(4)}</span>
+            </li>
+            <li className="map-bbox-row">
+              <span className="map-bbox-label">W</span>
+              <span>{selection.west.toFixed(4)}</span>
+            </li>
+            <li className="map-bbox-row">
+              <span className="map-bbox-label">E</span>
+              <span>{selection.east.toFixed(4)}</span>
+            </li>
+          </ul>
+        ) : (
+          <p className="map-bbox-empty">
+            Draw a rectangle or provide vertices to define a region.
+          </p>
+        )}
+      </div> */}
+    
+    {/* Vertices */}
+    <div className="space-y-1">
+    <span className="map-field-label">Coordinates (lat, lon)</span>
+    <textarea
+    rows={6}
+    className="map-vertices-textarea"
+    placeholder={`lat, lon\nlat, lon\nlat, lon\nlat, lon`}
+    value={verticesText}
+    onChange={(e) => {
+        setVerticesText(e.target.value);
+        setSelectedQueryName(null);
+        markQueryDirty();
+    }}
+    />
+    <p className="map-vertices-help">
+    Draw a rectangle to auto-fill these vertices, or paste your own list.
+    If you enter a single coordinate, the buffer (km) is used to create a
+    bounding box around it.
+    </p>
+    </div>
+
+    {/* Buffer */}
+    <div className="space-y-1">
+    <label className="map-field-label">Buffer (km)</label>
+    <input
+    type="number"
+    className="map-field-input"
+    value={bufferKm}
+    onChange={(e) => {
+        setBufferKm(e.target.value);
+        setSelectedQueryName(null);
+    }}
+    min="0"
+    step="0.1"
+    />
+    </div>
+    
+    {/* Time window */}
+    <div className="space-y-2">
+    {/* <span className="map-field-label">Time window</span> */}
+    
+    <div className="map-time-window-grid">
+
+    <MiniDatePicker
+    label="Start"
+    value={startDate}
+    onChange={handleStartDateChange}
+    isOpen={openPicker === "start"}
+    onToggle={() =>
+        setOpenPicker((prev) => (prev === "start" ? null : "start"))
+    }
+    align="left"
+    />
+    <MiniDatePicker
+    label="End"
+    value={endDate}
+    onChange={handleEndDateChange}
+    isOpen={openPicker === "end"}
+    onToggle={() =>
+        setOpenPicker((prev) => (prev === "end" ? null : "end"))
+    }
+    align="right"
+    />
+             <button
+            type="button"
+            className="map-select-area-button"
+            onClick={handleSelectClick}
+          >
+            Select area
+          </button>
+    
+    </div>
+
+    </div>
+    
+    
+
+
+    {/* Query name + Save button */}
+    <div className="space-y-2">
+    <label className="map-field-label">Query Name(Optional)</label>
+    <div className="map-query-name-row">
+    <input
+    type="text"
+    className="map-query-name-input"
+    placeholder="Enter Query Name"
+    value={queryName}
+    onChange={(e) => {
+        setQueryName(e.target.value);
+        if (selectedQueryName) {
+            setSelectedQueryName(null);
+        }
+    }}
+    />
+    
+    
+    <button
+    type="button"
+    className="map-query-save-button"
+    onClick={handleSaveCurrent}
+    >
+    Save
+    </button>
+
+     <button
+    type="button"
+    disabled={status === "running"}
+    className={[
+        "map-run-button",
+        status === "running"
+        ? "map-run-button--running"
+        : "map-run-button--idle",
+    ].join(" ")}
+    onClick={handleRun}
+    >
+    {status === "running" ? "Running…" : "Run"}
+    </button>
+    
+    </div>
+    </div>
+
+    
+    {/* Saved queries – directly below buttons */}
+    <div className="map-saved-queries-section">
+    <div className="map-saved-queries-header">
+    <span className="map-field-label">Saved queries</span>
+    <span className="map-saved-queries-count">
+    {savedQueries.length} total
+    </span>
+    </div>
+    <div className="map-saved-queries-container">
+    {savedQueries.length === 0 ? (
+        <div className="map-saved-queries-empty">
+        No saved queries yet. Configure a region and dates, give it a name,
+        then press Save.
+        </div>
+    ) : (
+        <ul className="map-saved-queries-list">
+        {savedQueries.map((q) => (
+            <li key={q.name} className="map-saved-query-row">
+            <button
+            type="button"
+            className={[
+                "map-saved-query-button",
+                q.name === selectedQueryName
+                ? "map-saved-query-button--selected"
+                : "",
+            ].join(" ")}
+            onClick={() => handleSelectSavedQuery(q.name)}
+            >
+            <div className="map-saved-query-name">{q.name}</div>
+            </button>
+            <button
+            type="button"
+            className="map-saved-query-delete"
+            onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteSavedQuery(q.name);
+            }}
+            aria-label="Delete saved query"
+            title="Delete"
+            >
+            ×
+            </button>
+            </li>
+        ))}
+        </ul>
+    )}
+    </div>
+    </div>
+    </div>
+);
 }

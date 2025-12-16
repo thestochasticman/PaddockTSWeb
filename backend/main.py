@@ -115,7 +115,11 @@ def get_results(job_id: str):
         ('Vegfrac Video Summary', aspect_ratio, f"static/{job_id}/checkpoints/{job_id}_manpad_vegfrac.mp4"),
     ]
 
+    
+
     meta_path = job_dir / "meta.json"
     if meta_path.exists():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
+
+    
     return ResultResponse(status="done", photos=photos, videos=videos, meta=meta)
