@@ -11,23 +11,52 @@ export default function SearchResultsToggle() {
 
   const [latestJobId, setLatestJobId] = useState<string | null>(null);
 
-  // Load latest jobId from localStorage on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(LATEST_JOB_STORAGE_KEY);
-    if (stored) setLatestJobId(stored);
+  const readLatestJobId = (): string | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem(LATEST_JOB_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  };
 
-    // Listen to storage changes (in case other components update it)
-    const handler = (e: StorageEvent) => {
+  // Load latest jobId + keep it fresh (storage only updates across tabs)
+  useEffect(() => {
+    const refresh = () => setLatestJobId(readLatestJobId());
+
+    refresh();
+
+    // Fires for changes from OTHER tabs/windows
+    const onStorage = (e: StorageEvent) => {
       if (e.key === LATEST_JOB_STORAGE_KEY) {
         setLatestJobId(e.newValue);
       }
     };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+
+    // Fires when user returns to the tab (covers same-tab updates)
+    const onFocus = () => refresh();
+    const onVis = () => {
+      if (!document.hidden) refresh();
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
-  const isOnSearch = pathname === "/" || pathname === "/search"; // adjust if needed
+  // If this toggle sits in a persistent layout, pathname changes won’t remount it.
+  // Refresh on route change so button state stays correct.
+  useEffect(() => {
+    setLatestJobId(readLatestJobId());
+  }, [pathname]);
+
+  const isOnSearch = pathname === "/" || pathname === "/search";
   const isOnResults = pathname.startsWith("/results");
 
   const handleGoSearch = () => {
@@ -35,11 +64,18 @@ export default function SearchResultsToggle() {
   };
 
   const handleGoResults = () => {
-    if (!latestJobId) return;
-    router.push(`/results/${latestJobId}`);
+    // Always read at click time (source of truth)
+    const id = readLatestJobId();
+    if (!id) return;
+
+    // keep state in sync so button doesn’t look disabled afterward
+    setLatestJobId(id);
+
+    router.push(`/results/${id}`);
   };
 
-  const hasResult = Boolean(latestJobId);
+  // Use state if available, but fall back to localStorage so it never goes stale
+  const hasResult = Boolean(latestJobId ?? readLatestJobId());
 
   return (
     <div className="toggle-root">
@@ -48,13 +84,12 @@ export default function SearchResultsToggle() {
         onClick={handleGoSearch}
         className={[
           "toggle-button",
-          isOnSearch
-            ? "toggle-button--active"
-            : "toggle-button--inactive",
+          isOnSearch ? "toggle-button--active" : "toggle-button--inactive",
         ].join(" ")}
       >
         Search
       </button>
+
       <button
         type="button"
         onClick={handleGoResults}
