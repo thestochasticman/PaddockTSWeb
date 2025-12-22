@@ -81,9 +81,18 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
         'end_date': str(q.end_date)}
     with open(meta_path, '+w') as file:
         json.dump(meta, file)
-    # background_tasks.add_task(get_outputs, q2)
-    background_tasks.add_task(run_pipeline_paddock_indices_veg_frac_checkpoints, q2)
-    # background_tasks.add_task(download_environmental_data, q2)
+
+    if not all(
+        [
+            exists(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_paddock_map_auto_fourier.png'),
+            exists(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_paddock_map_auto_rgb.png'),
+            exists(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_manpad_RGB.mp4'),
+            exists(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_manpad_vegfrac.mp4')
+        ]
+    ):
+        # background_tasks.add_task(get_outputs, q2)
+        background_tasks.add_task(run_pipeline_paddock_indices_veg_frac_checkpoints, q2)
+        # background_tasks.add_task(download_environmental_data, q2)
 
     # get_outputs(q2)
     return RunResponse(job_id=job_id)

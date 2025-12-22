@@ -331,5 +331,163 @@
         @apply ml-2 text-neutral-500 hover:text-red-400;
         font-size: 1.2em;
     }
-    
+
+    /* ---------- PaddockVisualSummary ---------- */
+
+    .pv-root {
+    @apply w-full space-y-3 min-h-0 text-neutral-200;
+    /* map-panel-ish: simple, tight, readable */
+    font-size: 11px;
+    line-height: 1.4;
+    }
+
+    .pv-header {
+    @apply flex items-center justify-between gap-2;
+    }
+
+    .pv-title {
+    @apply font-semibold text-neutral-400;
+    font-size: 1em;
+    }
+
+    .pv-subtitle {
+    @apply text-neutral-500;
+    font-size: 0.85em;
+    }
+
+    /* IMPORTANT: do NOT scroll here (Body already scrolls) */
+    .pv-shell {
+    @apply border border-neutral-800 bg-neutral-950/80 p-2;
+    overflow: visible;
+    }
+
+    /* Grid wrapper */
+    .pv-grid {
+    @apply w-full;
+    }
+
+    .pv-grid-item {
+    @apply overflow-hidden;
+    }
+
+    /* Card (no rounded) */
+    .pv-card {
+    @apply h-full w-full border border-neutral-800 bg-neutral-950 flex flex-col overflow-hidden shadow-sm;
+    }
+
+    /* Drag handle + title row */
+    .pv-card-handle {
+    @apply cursor-move select-none border-b border-neutral-800 flex items-center justify-between gap-2;
+    padding: 0.45em 0.75em; /* like map-panel inputs */
+    }
+
+    .pv-card-left {
+    @apply flex items-center gap-2 min-w-0;
+    }
+
+    .pv-dot {
+    @apply inline-flex h-2 w-2 rounded-full bg-emerald-400;
+    }
+
+    .pv-card-title {
+    @apply font-semibold text-neutral-100 truncate;
+    font-size: 0.95em;
+    }
+
+    .pv-card-kind {
+    @apply text-neutral-500;
+    font-size: 0.85em;
+    }
+
+    /* Media */
+    .pv-media {
+    @apply flex-1 min-h-0 relative bg-black;
+    }
+
+    .pv-media-fill {
+    @apply absolute inset-0 w-full h-full object-contain;
+    }
+
+    /* ---------- react-grid-layout / react-resizable theming ---------- */
+
+    .pv-shell .react-grid-placeholder {
+    background: rgba(82, 82, 82, 0.25) !important;
+    border: 1px dashed #404040 !important;
+    border-radius: 0 !important; /* no rounded */
+    }
+
+    .pv-shell .react-resizable-handle {
+    background-image: none !important;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    opacity: 0.9;
+    }
+
+    .pv-shell .react-resizable-handle::after {
+    content: "";
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    border-radius: 0;
+    }
+    .pv-shell {
+        @apply border border-neutral-800 bg-neutral-950/80 p-2;
+        overflow: visible;
+    }
+    .pv-grid-wrap {
+  @apply relative;
+}
+
+
+    /* ---------- Results page layout ---------- */
+
+.results-main {
+  @apply flex flex-1 min-h-0 min-w-0;
+}
+
+.results-pane {
+  @apply flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden;
+}
+
+.results-header {
+  @apply shrink-0 border-b border-neutral-800 px-4 py-3;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.results-title-row {
+  @apply flex items-baseline justify-between gap-3;
+}
+
+.results-title {
+  @apply text-neutral-100 font-semibold truncate;
+  font-size: 1.1em;
+}
+
+.results-header-right {
+  @apply flex items-center gap-2;
+}
+
+.results-meta-row {
+  @apply flex flex-wrap gap-x-4 gap-y-1 text-neutral-400;
+  font-size: 0.95em;
+}
+
+.results-meta-label {
+  @apply uppercase tracking-wide text-neutral-500 mr-1;
+}
+
+.results-meta-mono {
+  @apply font-mono;
+}
+
+.results-body {
+  @apply flex-1 min-h-0 overflow-auto px-4 py-4;
+}
+
 } /* end @layer components */

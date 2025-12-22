@@ -12,6 +12,7 @@ import { BASE, STORAGE_KEY, LATEST_JOB_STORAGE_KEY } from "./API";
 import { BboxToVertices } from "./BboxToVertices";
 import { VerticesToBbox } from "./VerticesToBBox";
 import { VerticesStringToVertexList } from "./VerticesStringToVertexList";
+import { setLatestJobId } from "../components/latestJob"; // adjust path
 
 type Status = "idle" | "submitting" | "running" | "error";
 
@@ -398,10 +399,11 @@ export function MapQueryPanel() {
 
             const json = await res.json();
             const newJobId = json.job_id ?? json.jobId;
+            setLatestJobId(newJobId);
 
-            if (!newJobId) throw new Error("Backend did not return a job id");
+            // if (!newJobId) throw new Error("Backend did not return a job id");
 
-            window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, newJobId);
+            // window.localStorage.setItem(LATEST_JOB_STORAGE_KEY, newJobId);
 
             setStatus("running");
             router.push(`/results/${newJobId}`);
