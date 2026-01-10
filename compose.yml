@@ -14,15 +14,20 @@ services:
       GDAL_DATA: /opt/conda/envs/PaddockTSEnv/share/gdal
       PROJ_LIB: /opt/conda/envs/PaddockTSEnv/share/proj
     volumes:
-       - ./backend:/app/backend
+       - /borevitz_projects/repos/paddock-ts-local:/borevitz_projects/repos/paddock-ts-local
+       - /borevitz_projects/repos/DAESIM_preprocess:/borevitz_projects/repos/DAESIM_preprocess
+       - ./backend:/app
        - /borevitz_projects/data/:/borevitz_projects/data/
        - /borevitz_projects/dev/tools/miniconda3/:/opt/conda/
+    
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 3200 --reload
 
     restart: always
     networks:
       - edge
 
   frontend:
+    user: "1001:1001"
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -30,9 +35,16 @@ services:
         NEXT_PUBLIC_API_URL: /PaddockTS/api
         NEXT_BASEPATH: /PaddockTS
     container_name: paddock-frontend
-    environment:
-      NODE_ENV: production
+    # environment:
+    #   # NODE_ENV: production
+    working_dir: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend
+      - paddock_frontend_node_modules:/app/frontend/node_modules
+      # - paddock_frontend_next:/app/frontend/.next
 
+    command: npm run dev
+      
     restart: always
     networks:
       - edge
@@ -63,3 +75,7 @@ services:
 networks:
   edge:
     external: true
+
+volumes:
+  paddock_frontend_node_modules:
+  # paddock_frontend_next:

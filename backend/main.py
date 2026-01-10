@@ -1,7 +1,9 @@
 from PaddockTS.IndicesAndVegFrac.add_indices_and_veg_frac import add_indices_and_veg_frac
 from utils.latlon_and_deg_buffer_from_bbox import latlon_and_def_buffer_deg_from_bbox
+from utils.paddock_visual_summary import PaddockVisualSummary
 from utils.latlon_from_bbox_and_buffer import latlon_from_bbox_and_buffer
 from PaddockTS.Plotting.checkpoint_plots import plot as plot_checkpoints
+from PaddockTS.Plotting.topographic_plots import plot_topography
 from PaddockTS.Data.environmental import download_environmental_data
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 from utils.PaddockTSWebQuery import PaddockTSWebQuery
@@ -21,12 +23,33 @@ from pathlib import Path
 import matplotlib
 import json
 import os
+from time import sleep
 
 def run_pipeline_paddock_indices_veg_frac_checkpoints(query: Query):
     get_paddocks(query)
     add_indices_and_veg_frac(query)
     plot_checkpoints(query)
-    return 
+    return
+
+def run_environmental_pipeline(query: Query):
+    download_environmental_data(query)
+    while not exists(query.path_ds2):
+        sleep(0.1)
+    plot_topography(query)
+
+def load_topography_json(path: Path):
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(d, dict):
+            return None
+        if d.get("kind") != "paddockts.topography.react.v1":
+            return None
+        if "extent4326" not in d or "layers" not in d:
+            return None
+        return d
+    except Exception:
+        return None
+
 
 os.environ["MPLBACKEND"] = "Agg"
 matplotlib.use("Agg", force=True)
@@ -81,7 +104,7 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
         'end_date': str(q.end_date)}
     with open(meta_path, '+w') as file:
         json.dump(meta, file)
-
+    # background_tasks.add_task(get_outputs, q2)
     if not all(
         [
             exists(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_paddock_map_auto_fourier.png'),
@@ -90,11 +113,29 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
             exists(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_manpad_vegfrac.mp4')
         ]
     ):
-        # background_tasks.add_task(get_outputs, q2)
         background_tasks.add_task(run_pipeline_paddock_indices_veg_frac_checkpoints, q2)
-        # background_tasks.add_task(download_environmental_data, q2)
 
-    # get_outputs(q2)
+    if not all(
+            [
+                
+                    exists(f"static/{job_id}/environmental/{job_id}_elevation.png"),
+                    exists(f"static/{job_id}/environmental/{job_id}_elevation_cbar.png"),
+
+                    exists(f"static/{job_id}/environmental/{job_id}_accumulation.png"),
+                    exists("static/{job_id}/environmental/{job_id}_accumulation_cbar.png"),
+
+                    exists(f"static/{job_id}/environmental/{job_id}_aspect.png"),
+                    exists(f"static/{job_id}/environmental/{job_id}_aspect_cbar.png"),
+
+                    exists(f"static/{job_id}/environmental/{job_id}_slope.png"),
+                    exists(f"static/{job_id}/environmental/{job_id}_slope_cbar.png"),
+            ]
+    ):
+        background_tasks.add_task(run_environmental_pipeline, q2)
+        
+    # background_tasks.add_task(download_environmental_data, q2)
+
+
     return RunResponse(job_id=job_id)
 
 @app.get("/results/{job_id}", response_model=ResultResponse)
@@ -115,7 +156,7 @@ def get_results(job_id: str):
         
     aspect_ratio = get_aspect_ratio(f'{STATIC_DIR}/{job_id}/checkpoints/{job_id}_paddock_map_auto_fourier.png')
     photos = [
-        ('Fourier Image of NDVI Over Time ', aspect_ratio, f'static/{job_id}/checkpoints/{job_id}_paddock_map_auto_fourier.png'),
+        ('Fourier Image of NDWI Over Time ', aspect_ratio, f'static/{job_id}/checkpoints/{job_id}_paddock_map_auto_fourier.png'),
         ('Labelled Paddocks', aspect_ratio, f"static/{job_id}/checkpoints/{job_id}_paddock_map_auto_rgb.png"),
     ]
     videos = [
@@ -124,11 +165,55 @@ def get_results(job_id: str):
         ('Vegfrac Video Summary', aspect_ratio, f"static/{job_id}/checkpoints/{job_id}_manpad_vegfrac.mp4"),
     ]
 
+    paddock_visual_summary = PaddockVisualSummary(photos=photos, videos=videos)
     
 
     meta_path = job_dir / "meta.json"
     if meta_path.exists():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
 
-    
-    return ResultResponse(status="done", photos=photos, videos=videos, meta=meta)
+    topo = {
+        "layers": [
+            {
+                "id": "elevation",
+                "title": "Elevation",
+                "map": f"static/{job_id}/environmental/{job_id}_elevation.png",
+                "cbar": f"static/{job_id}/environmental/{job_id}_elevation_cbar.png",
+
+                "w": 6,
+                "aspectRatio": aspect_ratio,
+            },
+            {
+                "id": "accumulation",
+                "title": "Accumulation",
+                "map": f"static/{job_id}/environmental/{job_id}_accumulation.png",
+                "cbar": f"static/{job_id}/environmental/{job_id}_accumulation_cbar.png",
+                "w": 6,
+                "aspectRatio": aspect_ratio
+            },
+            {
+                "id": "slope",
+                "title": "Slope",
+                "map": f"static/{job_id}/environmental/{job_id}_slope.png",
+                "cbar": f"static/{job_id}/environmental/{job_id}_slope_cbar.png",
+                "w": 6,
+                "aspectRatio": aspect_ratio
+            },
+            {
+                "id": "aspect",
+                "title": "Aspect",
+                "map": f"static/{job_id}/environmental/{job_id}_aspect.png",
+                "cbar": f"static/{job_id}/environmental/{job_id}_aspect_cbar.png",
+                "w": 6,
+                "aspectRatio": aspect_ratio
+            },
+
+      ]
+    }
+
+    return ResultResponse(
+        status="done",
+        paddock_visual_summary=paddock_visual_summary,
+        topography=topo,
+        meta=meta,
+    )

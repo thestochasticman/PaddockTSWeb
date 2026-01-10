@@ -121,6 +121,180 @@
 //   );
 // }
 
+// "use client";
+
+// import { useEffect, useMemo, useState } from "react";
+// import { Responsive, WidthProvider, Layout, Layouts } from "react-grid-layout";
+
+// const ResponsiveGridLayout = WidthProvider(Responsive);
+
+// export type VisualItemType = "image" | "video";
+
+// export type VisualItem = {
+//   id: string;
+//   title: string;
+//   type: VisualItemType;
+//   src: string;
+//   w?: number;           // grid width in columns
+//   h?: number;           // grid height in rows (optional)
+//   aspectRatio?: number; // height / width
+// };
+
+// type Props = {
+//   items: VisualItem[];
+// };
+
+// const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const;
+// const COLS = { lg: 12, md: 12, sm: 8, xs: 4, xxs: 1 } as const;
+
+// const ROW_HEIGHT = 60;
+// const MARGIN: [number, number] = [6, 6];
+// const CONTAINER_PADDING: [number, number] = [4, 4];
+
+// function bottomRows(layout: Layout[]): number {
+//   let b = 0;
+//   for (const it of layout) b = Math.max(b, (it.y ?? 0) + (it.h ?? 0));
+//   return b;
+// }
+
+// function rowsToPx(rows: number): number {
+//   if (rows <= 0) return 0;
+//   const [, my] = MARGIN;
+//   const [, py] = CONTAINER_PADDING;
+//   // Each row adds ROW_HEIGHT, plus vertical margin between rows, plus top/bottom padding
+//   return rows * ROW_HEIGHT + (rows - 1) * my + 2 * py;
+// }
+
+// function buildPackedLayout(items: VisualItem[], cols: number): Layout[] {
+//   const DEFAULT_W = 6;
+
+//   let x = 0;
+//   let y = 0;
+//   let rowH = 0;
+
+//   return items.map((item) => {
+//     const rawW = item.w ?? DEFAULT_W;
+//     const w = Math.max(1, Math.min(rawW, cols));
+
+//     const aspect = item.aspectRatio ?? 3 / 4; // height/width
+//     const h = item.h ?? Math.max(2, Math.round(w * aspect));
+
+//     // wrap to next row
+//     if (x + w > cols) {
+//       x = 0;
+//       y += rowH;
+//       rowH = 0;
+//     }
+
+//     const out: Layout = {
+//       i: item.id,
+//       x,
+//       y,
+//       w,
+//       h,
+//       minW: Math.min(3, cols),
+//       minH: 2,
+//     };
+
+//     x += w;
+//     rowH = Math.max(rowH, h);
+
+//     return out;
+//   });
+// }
+
+// export default function PaddockVisualSummary({ items }: Props) {
+//   const initialLayouts: Layouts = useMemo(() => {
+//     return {
+//       lg: buildPackedLayout(items, COLS.lg),
+//       md: buildPackedLayout(items, COLS.md),
+//       sm: buildPackedLayout(items, COLS.sm),
+//       xs: buildPackedLayout(items, COLS.xs),
+//       xxs: buildPackedLayout(items, COLS.xxs),
+//     };
+//   }, [items]);
+
+//   const [bp, setBp] = useState<keyof typeof COLS>("lg");
+//   const [layouts, setLayouts] = useState<Layouts>(initialLayouts);
+
+//   // Reset layouts when items change
+//   useEffect(() => {
+//     setLayouts(initialLayouts);
+//   }, [initialLayouts]);
+
+//   // Spacer height (in-flow height so the outer scroll container can scroll)
+//   const spacerHeight = useMemo(() => {
+//     const l = (layouts[bp] ?? []) as Layout[];
+//     return rowsToPx(bottomRows(l));
+//   }, [layouts, bp]);
+
+//   return (
+//     <section className="pv-root">
+//       <header className="pv-header">
+//         <div>
+//           <h2 className="pv-title">Visual Summary</h2>
+//           <p className="pv-subtitle"></p>
+//         </div>
+//       </header>
+
+//       <div className="pv-shell">
+//         {/* This spacer is the key: it creates real scroll height in normal flow */}
+//         <div className="pv-grid-wrap" style={{ height: spacerHeight || 0 }}>
+//           <ResponsiveGridLayout
+//             className="pv-grid"
+//             layouts={layouts}
+//             breakpoints={BREAKPOINTS}
+//             cols={COLS}
+//             rowHeight={ROW_HEIGHT}
+//             margin={MARGIN}
+//             containerPadding={CONTAINER_PADDING}
+//             compactType={null}
+//             autoSize={false} // we control the scroll height via spacer (more reliable)
+//             isDraggable
+//             isResizable
+//             draggableHandle=".pv-card-handle"
+//             onBreakpointChange={(next) => setBp(next as keyof typeof COLS)}
+//             onLayoutChange={(_currentLayout, allLayouts) => {
+//               // allLayouts includes the updated layout for the active breakpoint
+//               setLayouts(allLayouts);
+//             }}
+//           >
+//             {items.map((item) => (
+//               <div key={item.id} className="pv-grid-item">
+//                 <VisualCard item={item} />
+//               </div>
+//             ))}
+//           </ResponsiveGridLayout>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
+
+// function VisualCard({ item }: { item: VisualItem }) {
+//   return (
+//     <div className="pv-card">
+//       <div className="pv-card-handle">
+//         <div className="pv-card-left">
+//           <span className="pv-dot" />
+//           <h3 className="pv-card-title">{item.title}</h3>
+//         </div>
+//         <span className="pv-card-kind">{item.type === "image" ? "Image" : "Video"}</span>
+//       </div>
+
+//       <div className="pv-media">
+//         {item.type === "image" ? (
+//           <img src={item.src} alt={item.title} className="pv-media-fill" />
+//         ) : (
+//           <video src={item.src} className="pv-media-fill" controls />
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -161,7 +335,6 @@ function rowsToPx(rows: number): number {
   if (rows <= 0) return 0;
   const [, my] = MARGIN;
   const [, py] = CONTAINER_PADDING;
-  // Each row adds ROW_HEIGHT, plus vertical margin between rows, plus top/bottom padding
   return rows * ROW_HEIGHT + (rows - 1) * my + 2 * py;
 }
 
@@ -179,7 +352,6 @@ function buildPackedLayout(items: VisualItem[], cols: number): Layout[] {
     const aspect = item.aspectRatio ?? 3 / 4; // height/width
     const h = item.h ?? Math.max(2, Math.round(w * aspect));
 
-    // wrap to next row
     if (x + w > cols) {
       x = 0;
       y += rowH;
@@ -217,12 +389,10 @@ export default function PaddockVisualSummary({ items }: Props) {
   const [bp, setBp] = useState<keyof typeof COLS>("lg");
   const [layouts, setLayouts] = useState<Layouts>(initialLayouts);
 
-  // Reset layouts when items change
   useEffect(() => {
     setLayouts(initialLayouts);
   }, [initialLayouts]);
 
-  // Spacer height (in-flow height so the outer scroll container can scroll)
   const spacerHeight = useMemo(() => {
     const l = (layouts[bp] ?? []) as Layout[];
     return rowsToPx(bottomRows(l));
@@ -230,41 +400,52 @@ export default function PaddockVisualSummary({ items }: Props) {
 
   return (
     <section className="pv-root">
-      <header className="pv-header">
-        <div>
-          <h2 className="pv-title">Visual Summary</h2>
-          <p className="pv-subtitle"></p>
+      {/* Outer “box” like TopographyPanel */}
+      <div className="border border-neutral-800 bg-neutral-950/30 p-3">
+        {/* Title INSIDE the box */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-neutral-500">
+              Visual Summary
+            </div>
+            {/* <div className="text-xs text-neutral-300">
+              {items.length ? `${items.length} item${items.length === 1 ? "" : "s"}` : "No media yet"}
+            </div> */}
+          </div>
+{/* 
+          <div className="text-[11px] text-neutral-500">
+            {bp.toUpperCase()}
+          </div> */}
         </div>
-      </header>
 
-      <div className="pv-shell">
-        {/* This spacer is the key: it creates real scroll height in normal flow */}
-        <div className="pv-grid-wrap" style={{ height: spacerHeight || 0 }}>
-          <ResponsiveGridLayout
-            className="pv-grid"
-            layouts={layouts}
-            breakpoints={BREAKPOINTS}
-            cols={COLS}
-            rowHeight={ROW_HEIGHT}
-            margin={MARGIN}
-            containerPadding={CONTAINER_PADDING}
-            compactType={null}
-            autoSize={false} // we control the scroll height via spacer (more reliable)
-            isDraggable
-            isResizable
-            draggableHandle=".pv-card-handle"
-            onBreakpointChange={(next) => setBp(next as keyof typeof COLS)}
-            onLayoutChange={(_currentLayout, allLayouts) => {
-              // allLayouts includes the updated layout for the active breakpoint
-              setLayouts(allLayouts);
-            }}
-          >
-            {items.map((item) => (
-              <div key={item.id} className="pv-grid-item">
-                <VisualCard item={item} />
-              </div>
-            ))}
-          </ResponsiveGridLayout>
+        {/* Grid area */}
+        <div className="mt-3">
+          <div className="pv-grid-wrap" style={{ height: spacerHeight || 0 }}>
+            <ResponsiveGridLayout
+              className="pv-grid"
+              layouts={layouts}
+              breakpoints={BREAKPOINTS}
+              cols={COLS}
+              rowHeight={ROW_HEIGHT}
+              margin={MARGIN}
+              containerPadding={CONTAINER_PADDING}
+              compactType={null}
+              autoSize={false}
+              isDraggable
+              isResizable
+              draggableHandle=".pv-card-handle"
+              onBreakpointChange={(next) => setBp(next as keyof typeof COLS)}
+              onLayoutChange={(_currentLayout, allLayouts) => {
+                setLayouts(allLayouts);
+              }}
+            >
+              {items.map((item) => (
+                <div key={item.id} className="pv-grid-item">
+                  <VisualCard item={item} />
+                </div>
+              ))}
+            </ResponsiveGridLayout>
+          </div>
         </div>
       </div>
     </section>
@@ -279,7 +460,9 @@ function VisualCard({ item }: { item: VisualItem }) {
           <span className="pv-dot" />
           <h3 className="pv-card-title">{item.title}</h3>
         </div>
-        <span className="pv-card-kind">{item.type === "image" ? "Image" : "Video"}</span>
+        <span className="pv-card-kind">
+          {item.type === "image" ? "Image" : "Video"}
+        </span>
       </div>
 
       <div className="pv-media">
@@ -292,5 +475,3 @@ function VisualCard({ item }: { item: VisualItem }) {
     </div>
   );
 }
-
-
