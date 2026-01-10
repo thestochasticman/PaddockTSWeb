@@ -571,6 +571,7 @@
   import { TopographyItem } from "../../components/TopographyPanel";
   import OzwaldDailyPanel from "../../components/OzwaldDailyPanel";
   import Ozwald8DayPanel from "../../components/Ozwald8DayPanel";
+  import SiloDailyPanel from "../../components/SiloDailyPanel";
 
   // paddock visual summary component
   import PaddockVisualSummary, {
@@ -1183,6 +1184,8 @@ function assetUrl(p: string) {
       <OzwaldDailyPanel jobId={jobId} apiBase={API} />
 
       <Ozwald8DayPanel jobId={jobId} apiBase={API} />
+
+      <SiloDailyPanel jobId={jobId} apiBase={API} />
     </div>
   )}
 </div>
