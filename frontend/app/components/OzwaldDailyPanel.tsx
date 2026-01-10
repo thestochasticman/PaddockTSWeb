@@ -457,7 +457,7 @@ export default function OzwaldDailyPanel({ jobId, apiBase }: Props) {
           <>
             {/* Variable toggles */}
             <div className="mb-3 flex flex-wrap items-center gap-1">
-              {availableVars.map((varName) => {
+              {availableVars.filter(v => VARIABLE_INFO[v]).map((varName) => {
                 const info = VARIABLE_INFO[varName];
                 const isSelected = selectedVars.has(varName);
                 return (
