@@ -40,7 +40,6 @@ const VARIABLE_INFO: Record<string, { label: string; unit: string; color: string
   Tmin: { label: "Min Temperature", unit: "°C", color: "#3b82f6", description: "Minimum daily temperature" },
   Pg: { label: "Precipitation", unit: "mm/day", color: "#06b6d4", description: "Gross precipitation" },
   Uavg: { label: "Avg Wind Speed", unit: "m/s", color: "#8b5cf6", description: "Average 24h windspeed" },
-  Ueff: { label: "Eff Wind Speed", unit: "m/s", color: "#a855f7", description: "Effective daytime windspeed" },
   VPeff: { label: "Eff Rainfall", unit: "mm", color: "#0ea5e9", description: "Volume of effective rainfall" },
 };
 
