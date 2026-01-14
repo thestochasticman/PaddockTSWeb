@@ -1,10 +1,18 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 
-// @ts-ignore - react-plotly.js doesn't have types
-const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
+// Dynamic import with proper typing for react-plotly.js
+const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as React.ComponentType<{
+  data: any[];
+  layout: any;
+  config?: any;
+  style?: React.CSSProperties;
+  revision?: number;
+  onInitialized?: (figure: any, graphDiv: any) => void;
+  onUpdate?: (figure: any, graphDiv: any) => void;
+}>;
 
 type DailyRow = {
   time: string; // "YYYY-MM-DD"
@@ -50,6 +58,25 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
     new Set(["radiation", "max_temp", "min_temp", "daily_rain"])
   );
   const [downloading, setDownloading] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Track container size changes and trigger chart re-render
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const gridItem = container.parentElement;
+    if (!gridItem) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Increment revision to trigger Plotly layout update
+      setRevision((r) => r + 1);
+    });
+
+    resizeObserver.observe(gridItem);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,6 +190,9 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
   const vpVars = ["vp"];
   const etVars = ["et_morton_potential"];
 
+  // Use a fixed minimum height to enable scrolling when panel is resized small
+  const chartHeight = 250;
+
   const renderRadiationChart = () => {
     const visibleVars = radiationVars.filter((v) => selectedVars.has(v) && availableVars.includes(v));
     if (visibleVars.length === 0) return null;
@@ -187,13 +217,13 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
         </div>
 
         <div className="pv-media">
-          <div style={{ width: "100%", height: "100%", padding: 4, boxSizing: "border-box" }}>
-            <Plot
-              data={traces}
-              layout={{
-                autosize: true,
-                height: 280,
-                margin: { l: 50, r: 10, t: 10, b: 40 },
+          <Plot
+            revision={revision}
+            data={traces}
+            layout={{
+              autosize: true,
+              height: chartHeight,
+              margin: { l: 50, r: 10, t: 10, b: 40 },
                 paper_bgcolor: "rgba(0,0,0,0)",
                 plot_bgcolor: "rgba(0,0,0,0)",
                 hovermode: "x unified",
@@ -217,7 +247,6 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
               }}
               style={{ width: "100%" }}
             />
-          </div>
         </div>
       </div>
     );
@@ -247,13 +276,13 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
         </div>
 
         <div className="pv-media">
-          <div style={{ width: "100%", height: "100%", padding: 4, boxSizing: "border-box" }}>
-            <Plot
-              data={traces}
-              layout={{
-                autosize: true,
-                height: 280,
-                margin: { l: 50, r: 10, t: 10, b: 40 },
+          <Plot
+            revision={revision}
+            data={traces}
+            layout={{
+              autosize: true,
+              height: chartHeight,
+              margin: { l: 50, r: 10, t: 10, b: 40 },
                 paper_bgcolor: "rgba(0,0,0,0)",
                 plot_bgcolor: "rgba(0,0,0,0)",
                 hovermode: "x unified",
@@ -277,7 +306,6 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
               }}
               style={{ width: "100%" }}
             />
-          </div>
         </div>
       </div>
     );
@@ -306,13 +334,13 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
         </div>
 
         <div className="pv-media">
-          <div style={{ width: "100%", height: "100%", padding: 4, boxSizing: "border-box" }}>
-            <Plot
-              data={traces}
-              layout={{
-                autosize: true,
-                height: 280,
-                margin: { l: 50, r: 10, t: 10, b: 40 },
+          <Plot
+            revision={revision}
+            data={traces}
+            layout={{
+              autosize: true,
+              height: chartHeight,
+              margin: { l: 50, r: 10, t: 10, b: 40 },
                 paper_bgcolor: "rgba(0,0,0,0)",
                 plot_bgcolor: "rgba(0,0,0,0)",
                 hovermode: "x unified",
@@ -336,7 +364,6 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
               }}
               style={{ width: "100%" }}
             />
-          </div>
         </div>
       </div>
     );
@@ -366,13 +393,13 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
         </div>
 
         <div className="pv-media">
-          <div style={{ width: "100%", height: "100%", padding: 4, boxSizing: "border-box" }}>
-            <Plot
-              data={traces}
-              layout={{
-                autosize: true,
-                height: 280,
-                margin: { l: 50, r: 10, t: 10, b: 40 },
+          <Plot
+            revision={revision}
+            data={traces}
+            layout={{
+              autosize: true,
+              height: chartHeight,
+              margin: { l: 50, r: 10, t: 10, b: 40 },
                 paper_bgcolor: "rgba(0,0,0,0)",
                 plot_bgcolor: "rgba(0,0,0,0)",
                 hovermode: "x unified",
@@ -396,7 +423,6 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
               }}
               style={{ width: "100%" }}
             />
-          </div>
         </div>
       </div>
     );
@@ -426,13 +452,13 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
         </div>
 
         <div className="pv-media">
-          <div style={{ width: "100%", height: "100%", padding: 4, boxSizing: "border-box" }}>
-            <Plot
-              data={traces}
-              layout={{
-                autosize: true,
-                height: 280,
-                margin: { l: 50, r: 10, t: 10, b: 40 },
+          <Plot
+            revision={revision}
+            data={traces}
+            layout={{
+              autosize: true,
+              height: chartHeight,
+              margin: { l: 50, r: 10, t: 10, b: 40 },
                 paper_bgcolor: "rgba(0,0,0,0)",
                 plot_bgcolor: "rgba(0,0,0,0)",
                 hovermode: "x unified",
@@ -456,17 +482,21 @@ export default function SiloDailyPanel({ jobId, apiBase }: Props) {
               }}
               style={{ width: "100%" }}
             />
-          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <section className="pv-root">
+    <section className="pv-root h-full overflow-y-auto" ref={containerRef}>
       <div className="border border-neutral-800 bg-neutral-950/30 p-3">
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div>
+          <div className="flex items-center gap-2">
+            <div className="drag-handle cursor-move px-1 py-1 hover:bg-neutral-800 transition-colors" title="Drag to reorder">
+              <svg className="w-3 h-3 text-neutral-600" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M3 2h2v2H3V2zm0 5h2v2H3V7zm0 5h2v2H3v-2zm5-10h2v2H8V2zm0 5h2v2H8V7zm0 5h2v2H8v-2z"/>
+              </svg>
+            </div>
             <div className="text-[11px] uppercase tracking-wide text-neutral-500">
               SILO Daily Climate Data
             </div>

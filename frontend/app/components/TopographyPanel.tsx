@@ -180,10 +180,15 @@ export default function TopographyPanel({ items }: Props) {
   }, [layouts, bp]);
 
   return (
-    <section className="pv-root">
+    <section className="pv-root h-full overflow-y-auto">
       <div className="border border-neutral-800 bg-neutral-950/30 p-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="flex items-center gap-2">
+            <div className="drag-handle cursor-move px-1 py-1 hover:bg-neutral-800 transition-colors" title="Drag to reorder">
+              <svg className="w-3 h-3 text-neutral-600" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M3 2h2v2H3V2zm0 5h2v2H3V7zm0 5h2v2H3v-2zm5-10h2v2H8V2zm0 5h2v2H8V7zm0 5h2v2H8v-2z"/>
+              </svg>
+            </div>
             <div className="text-[11px] uppercase tracking-wide text-neutral-500">
               Topography
             </div>
@@ -203,8 +208,8 @@ export default function TopographyPanel({ items }: Props) {
               containerPadding={CONTAINER_PADDING}
               compactType={null}
               autoSize={false}
-              isDraggable
-              isResizable
+              isDraggable={false}
+              isResizable={false}
               draggableHandle=".pv-card-handle"
               onBreakpointChange={(next) =>
                 setBp(next as keyof typeof COLS)

@@ -372,7 +372,7 @@
 
     /* Card (no rounded) */
     .pv-card {
-    @apply h-full w-full border border-neutral-800 bg-neutral-950 flex flex-col overflow-hidden shadow-sm;
+    @apply w-full border border-neutral-800 bg-neutral-950 flex flex-col overflow-visible shadow-sm;
     }
 
     /* Drag handle + title row */

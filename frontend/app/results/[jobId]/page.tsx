@@ -572,6 +572,7 @@
   import OzwaldDailyPanel from "../../components/OzwaldDailyPanel";
   import Ozwald8DayPanel from "../../components/Ozwald8DayPanel";
   import SiloDailyPanel from "../../components/SiloDailyPanel";
+  import DraggableLayout from "../../components/DraggableLayout";
 
   // paddock visual summary component
   import PaddockVisualSummary, {
@@ -1176,17 +1177,22 @@ function assetUrl(p: string) {
       No media returned for this job.
     </div>
   ) : (
-    <div className="flex flex-col gap-4">
-      <PaddockVisualSummary items={visualItems} />
-
-      {topoItems.length ? <TopographyPanel items={topoItems} /> : null}
-
-      <OzwaldDailyPanel jobId={jobId} apiBase={API} />
-
-      <Ozwald8DayPanel jobId={jobId} apiBase={API} />
-
-      <SiloDailyPanel jobId={jobId} apiBase={API} />
-    </div>
+    <DraggableLayout
+      itemKeys={
+        topoItems.length
+          ? ["visual-summary", "topography", "ozwald-daily", "ozwald-8day", "silo-daily"]
+          : ["visual-summary", "ozwald-daily", "ozwald-8day", "silo-daily"]
+      }
+      isEditable={true}
+    >
+      {[
+        <PaddockVisualSummary key="visual-summary" items={visualItems} />,
+        ...(topoItems.length ? [<TopographyPanel key="topography" items={topoItems} />] : []),
+        <OzwaldDailyPanel key="ozwald-daily" jobId={jobId} apiBase={API} />,
+        <Ozwald8DayPanel key="ozwald-8day" jobId={jobId} apiBase={API} />,
+        <SiloDailyPanel key="silo-daily" jobId={jobId} apiBase={API} />,
+      ]}
+    </DraggableLayout>
   )}
 </div>
         </div>
