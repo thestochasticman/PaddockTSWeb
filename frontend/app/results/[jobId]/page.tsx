@@ -572,6 +572,7 @@
   import OzwaldDailyPanel from "../../components/OzwaldDailyPanel";
   import Ozwald8DayPanel from "../../components/Ozwald8DayPanel";
   import SiloDailyPanel from "../../components/SiloDailyPanel";
+  import CalendarPanel from "../../components/CalendarPanel";
   import DraggableLayout from "../../components/DraggableLayout";
 
   // paddock visual summary component
@@ -1180,14 +1181,15 @@ function assetUrl(p: string) {
     <DraggableLayout
       itemKeys={
         topoItems.length
-          ? ["visual-summary", "topography", "ozwald-daily", "ozwald-8day", "silo-daily"]
-          : ["visual-summary", "ozwald-daily", "ozwald-8day", "silo-daily"]
+          ? ["visual-summary", "topography", "calendar", "ozwald-daily", "ozwald-8day", "silo-daily"]
+          : ["visual-summary", "calendar", "ozwald-daily", "ozwald-8day", "silo-daily"]
       }
       isEditable={true}
     >
       {[
         <PaddockVisualSummary key="visual-summary" items={visualItems} />,
         ...(topoItems.length ? [<TopographyPanel key="topography" items={topoItems} />] : []),
+        <CalendarPanel key="calendar" jobId={jobId} apiBase={API} />,
         <OzwaldDailyPanel key="ozwald-daily" jobId={jobId} apiBase={API} />,
         <Ozwald8DayPanel key="ozwald-8day" jobId={jobId} apiBase={API} />,
         <SiloDailyPanel key="silo-daily" jobId={jobId} apiBase={API} />,

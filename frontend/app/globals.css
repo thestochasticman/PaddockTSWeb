@@ -337,7 +337,7 @@
     .pv-root {
     @apply w-full space-y-3 min-h-0 text-neutral-200;
     /* map-panel-ish: simple, tight, readable */
-    font-size: 11px;
+    font-size: 14px;
     line-height: 1.4;
     }
 
@@ -346,13 +346,13 @@
     }
 
     .pv-title {
-    @apply font-semibold text-neutral-400;
-    font-size: 1em;
+    @apply font-semibold text-neutral-200;
+    font-size: 1.2em;
     }
 
     .pv-subtitle {
-    @apply text-neutral-500;
-    font-size: 0.85em;
+    @apply text-neutral-400;
+    font-size: 1em;
     }
 
     /* IMPORTANT: do NOT scroll here (Body already scrolls) */
@@ -367,12 +367,12 @@
     }
 
     .pv-grid-item {
-    @apply overflow-hidden;
+    @apply overflow-hidden h-full;
     }
 
     /* Card (no rounded) */
     .pv-card {
-    @apply w-full border border-neutral-800 bg-neutral-950 flex flex-col overflow-visible shadow-sm;
+    @apply w-full h-full border border-neutral-800 bg-neutral-950 flex flex-col overflow-hidden shadow-sm;
     }
 
     /* Drag handle + title row */
@@ -391,12 +391,12 @@
 
     .pv-card-title {
     @apply font-semibold text-neutral-100 truncate;
-    font-size: 0.95em;
+    font-size: 1.1em;
     }
 
     .pv-card-kind {
-    @apply text-neutral-500;
-    font-size: 0.85em;
+    @apply text-neutral-400;
+    font-size: 1em;
     }
 
     /* Media */
@@ -456,7 +456,7 @@
 
 .results-header {
   @apply shrink-0 border-b border-neutral-800 px-4 py-3;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
@@ -466,7 +466,7 @@
 
 .results-title {
   @apply text-neutral-100 font-semibold truncate;
-  font-size: 1.1em;
+  font-size: 1.3em;
 }
 
 .results-header-right {
@@ -474,12 +474,12 @@
 }
 
 .results-meta-row {
-  @apply flex flex-wrap gap-x-4 gap-y-1 text-neutral-400;
+  @apply flex flex-wrap gap-x-4 gap-y-1 text-neutral-300;
   font-size: 0.95em;
 }
 
 .results-meta-label {
-  @apply uppercase tracking-wide text-neutral-500 mr-1;
+  @apply uppercase tracking-wide text-neutral-400 mr-1;
 }
 
 .results-meta-mono {

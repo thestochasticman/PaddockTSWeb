@@ -30,8 +30,8 @@ type Props = {
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const;
 const COLS = { lg: 12, md: 12, sm: 8, xs: 4, xxs: 1 } as const;
 
-const ROW_HEIGHT = 60;
-const MARGIN: [number, number] = [6, 6];
+const ROW_HEIGHT = 80;
+const MARGIN: [number, number] = [8, 8];
 const CONTAINER_PADDING: [number, number] = [4, 4];
 
 // Keep the colorbar readable in the frontend
@@ -78,7 +78,8 @@ function buildPackedLayout(
     // This keeps card heights roughly consistent with the combined map+cbar rendering.
     const cardAspect = mapAspect * (1 - CBAR_FRAC);
 
-    const h = item.h ?? Math.max(2, Math.round(w * cardAspect));
+    // Multiply by 1.5 to make items taller
+    const h = item.h ?? Math.max(4, Math.round(w * cardAspect * 1.5));
 
     if (x + w > cols) {
       x = 0;
@@ -93,7 +94,7 @@ function buildPackedLayout(
       w,
       h,
       minW: Math.min(3, cols),
-      minH: 2,
+      minH: 3,
     };
 
     x += w;
@@ -180,23 +181,17 @@ export default function TopographyPanel({ items }: Props) {
   }, [layouts, bp]);
 
   return (
-    <section className="pv-root h-full overflow-y-auto">
-      <div className="border border-neutral-800 bg-neutral-950/30 p-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="drag-handle cursor-move px-1 py-1 hover:bg-neutral-800 transition-colors" title="Drag to reorder">
-              <svg className="w-3 h-3 text-neutral-600" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M3 2h2v2H3V2zm0 5h2v2H3V7zm0 5h2v2H3v-2zm5-10h2v2H8V2zm0 5h2v2H8V7zm0 5h2v2H8v-2z"/>
-              </svg>
-            </div>
-            <div className="text-[11px] uppercase tracking-wide text-neutral-500">
-              Topography
-            </div>
+    <section className="pv-root">
+      <div className="border border-neutral-800 bg-neutral-950/30">
+        {/* Header */}
+        <div className="p-3 pb-2 border-b border-neutral-800/50">
+          <div className="text-[14px] uppercase tracking-wide text-neutral-300">
+            Topography
           </div>
-          {/* <div className="text-[11px] text-neutral-500">{bp.toUpperCase()}</div> */}
         </div>
 
-        <div className="mt-3">
+        {/* Content - auto height */}
+        <div className="p-3 pt-2">
           <div className="pv-grid-wrap" style={{ height: spacerHeight || 0 }}>
             <ResponsiveGridLayout
               className="pv-grid"

@@ -1,4 +1,6 @@
 import "./globals.css";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 

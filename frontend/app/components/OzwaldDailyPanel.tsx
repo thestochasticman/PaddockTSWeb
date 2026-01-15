@@ -440,50 +440,40 @@ export default function OzwaldDailyPanel({ jobId, apiBase }: Props) {
   };
 
   return (
-    <section className="pv-root h-full overflow-y-auto" ref={containerRef}>
-      <div className="border border-neutral-800 bg-neutral-950/30 p-3">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <div className="drag-handle cursor-move px-1 py-1 hover:bg-neutral-800 transition-colors" title="Drag to reorder">
-              <svg className="w-3 h-3 text-neutral-600" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M3 2h2v2H3V2zm0 5h2v2H3V7zm0 5h2v2H3v-2zm5-10h2v2H8V2zm0 5h2v2H8V7zm0 5h2v2H8v-2z"/>
-              </svg>
-            </div>
-            <div className="text-[11px] uppercase tracking-wide text-neutral-500">
+    <section className="pv-root" ref={containerRef}>
+      <div className="border border-neutral-800 bg-neutral-950/30">
+        {/* Header */}
+        <div className="p-3 pb-2 border-b border-neutral-800/50">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="text-[14px] uppercase tracking-wide text-neutral-300">
               OzWALD Daily Climate Data
             </div>
+
+            {payload && (
+              <div className="flex gap-2">
+                <button
+                  onClick={downloadCSV}
+                  disabled={downloading}
+                  className="text-[12px] px-2 py-1 border border-neutral-700 hover:bg-neutral-800 text-neutral-300 disabled:opacity-50"
+                  title="Download as CSV"
+                >
+                  CSV
+                </button>
+                <button
+                  onClick={downloadJSON}
+                  disabled={downloading}
+                  className="text-[12px] px-2 py-1 border border-neutral-700 hover:bg-neutral-800 text-neutral-300 disabled:opacity-50"
+                  title="Download as JSON"
+                >
+                  JSON
+                </button>
+              </div>
+            )}
           </div>
 
+          {/* Variable toggles in header */}
           {payload && (
-            <div className="flex gap-2">
-              <button
-                onClick={downloadCSV}
-                disabled={downloading}
-                className="text-[10px] px-2 py-1 border border-neutral-700 hover:bg-neutral-800 text-neutral-300 disabled:opacity-50"
-                title="Download as CSV"
-              >
-                CSV
-              </button>
-              <button
-                onClick={downloadJSON}
-                disabled={downloading}
-                className="text-[10px] px-2 py-1 border border-neutral-700 hover:bg-neutral-800 text-neutral-300 disabled:opacity-50"
-                title="Download as JSON"
-              >
-                JSON
-              </button>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="text-sm text-red-300 mb-3">{error}</div>
-        )}
-
-        {payload && (
-          <>
-            {/* Variable toggles */}
-            <div className="mb-3 flex flex-wrap items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               {availableVars.filter(v => VARIABLE_INFO[v]).map((varName) => {
                 const info = VARIABLE_INFO[varName];
                 const isSelected = selectedVars.has(varName);
@@ -491,16 +481,16 @@ export default function OzwaldDailyPanel({ jobId, apiBase }: Props) {
                   <button
                     key={varName}
                     onClick={() => toggleVariable(varName)}
-                    className={`px-1.5 py-0.5 border text-[9px] transition-colors ${
+                    className={`px-2 py-1 border text-[12px] transition-colors ${
                       isSelected
                         ? "border-neutral-600 bg-neutral-800 text-neutral-100"
                         : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:bg-neutral-900"
                     }`}
                     title={info?.description}
                   >
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <span
-                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        className="w-2 h-2 rounded-full flex-shrink-0"
                         style={{ backgroundColor: info?.color }}
                       />
                       <span className="whitespace-nowrap">{info?.label || varName}</span>
@@ -509,8 +499,16 @@ export default function OzwaldDailyPanel({ jobId, apiBase }: Props) {
                 );
               })}
             </div>
+          )}
+        </div>
 
-            {/* Charts */}
+        {/* Content - auto height */}
+        <div className="p-3 pt-2">
+          {error && (
+            <div className="text-sm text-red-300 mb-3">{error}</div>
+          )}
+
+          {payload && (
             <div className="space-y-2">
               {renderTemperatureChart()}
               {renderPrecipitationChart()}
@@ -523,14 +521,14 @@ export default function OzwaldDailyPanel({ jobId, apiBase }: Props) {
                 </div>
               )}
             </div>
-          </>
-        )}
+          )}
 
-        {!payload && !error && (
-          <div className="text-sm text-neutral-300 py-8 text-center">
-            Loading OzWALD daily data...
-          </div>
-        )}
+          {!payload && !error && (
+            <div className="text-sm text-neutral-300 py-8 text-center">
+              Loading OzWALD daily data...
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

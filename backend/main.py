@@ -4,6 +4,7 @@ from utils.paddock_visual_summary import PaddockVisualSummary
 from utils.latlon_from_bbox_and_buffer import latlon_from_bbox_and_buffer
 from PaddockTS.Plotting.checkpoint_plots import plot as plot_checkpoints
 from PaddockTS.Plotting.topographic_plots import plot_topography
+from PaddockTS.Plotting.calendar_plot import generate_calendar_from_query
 from PaddockTS.Data.environmental import download_environmental_data
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 from utils.PaddockTSWebQuery import PaddockTSWebQuery
@@ -36,6 +37,15 @@ def run_environmental_pipeline(query: Query):
     while not exists(query.path_ds2):
         sleep(0.1)
     plot_topography(query)
+
+def run_calendar_pipeline(query: Query):
+    # Wait for ds2 to be available (created by paddock pipeline)
+    while not exists(query.path_ds2):
+        sleep(0.1)
+    # Wait for paddock polygons to be available
+    while not exists(query.path_polygons):
+        sleep(0.1)
+    generate_calendar_from_query(query)
 
 def load_topography_json(path: Path):
     try:
@@ -117,7 +127,7 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
 
     if not all(
             [
-                
+
                     exists(f"static/{job_id}/environmental/{job_id}_elevation.png"),
                     exists(f"static/{job_id}/environmental/{job_id}_elevation_cbar.png"),
 
@@ -132,9 +142,11 @@ def run_job(q: PaddockTSWebQuery, background_tasks: BackgroundTasks):
             ]
     ):
         background_tasks.add_task(run_environmental_pipeline, q2)
-        
-    # background_tasks.add_task(download_environmental_data, q2)
 
+    # Calendar plot generation
+    calendar_json_path = f'{STATIC_DIR}/{job_id}/{job_id}_calendar.json'
+    if not exists(calendar_json_path):
+        background_tasks.add_task(run_calendar_pipeline, q2)
 
     return RunResponse(job_id=job_id)
 
