@@ -490,4 +490,29 @@
   @apply flex-1 min-h-0 overflow-auto px-4 py-4;
 }
 
+/* Panel toggle bar - sticky, doesn't scroll with content */
+.panel-toggle-bar {
+  @apply shrink-0 flex items-center px-4 py-3 border-b border-neutral-800 bg-neutral-900;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.panel-toggle-group {
+  @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 gap-1;
+  font-size: 20px;
+}
+
+.panel-toggle-btn {
+  @apply px-3 py-1 transition-colors;
+}
+
+.panel-toggle-btn-active {
+  @apply bg-neutral-200 text-neutral-950;
+}
+
+.panel-toggle-btn:not(.panel-toggle-btn-active) {
+  @apply text-neutral-300 hover:bg-neutral-800;
+}
+
 } /* end @layer components */

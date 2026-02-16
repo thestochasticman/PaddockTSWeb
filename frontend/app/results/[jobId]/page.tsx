@@ -709,6 +709,16 @@ function assetUrl(p: string) {
     const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
     const [retryNonce, setRetryNonce] = useState(0);
 
+    // Panel visibility state
+    const [visiblePanels, setVisiblePanels] = useState<Record<string, boolean>>({
+      "visual-summary": true,
+      "topography": true,
+      "calendar": true,
+      "ozwald-daily": true,
+      "ozwald-8day": true,
+      "silo-daily": true,
+    });
+
     const timerRef = useRef<number | null>(null);
     const attemptRef = useRef(0);
 
@@ -939,6 +949,43 @@ function assetUrl(p: string) {
       );
     };
 
+    // Panel toggle configuration
+    const panelLabels: Record<string, string> = {
+      "visual-summary": "Visual Summary",
+      "topography": "Topography",
+      "calendar": "Calendar",
+      "ozwald-daily": "Ozwald Daily",
+      "ozwald-8day": "Ozwald 8-Day",
+      "silo-daily": "Silo Daily",
+    };
+
+    const togglePanel = (key: string) => {
+      setVisiblePanels((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const PanelToggleBar = () => {
+      const allPanelKeys = topoItems.length
+        ? ["visual-summary", "topography", "calendar", "ozwald-daily", "ozwald-8day", "silo-daily"]
+        : ["visual-summary", "calendar", "ozwald-daily", "ozwald-8day", "silo-daily"];
+
+      return (
+        <div className="panel-toggle-bar">
+          <div className="panel-toggle-group">
+            {allPanelKeys.map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => togglePanel(key)}
+                className={`panel-toggle-btn ${visiblePanels[key] ? "panel-toggle-btn-active" : ""}`}
+              >
+                {panelLabels[key]}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
     // Show "waiting" any time we have no payload but we are still polling (404/202 pending is normal)
     if (!data && polling && !error) {
       return (
@@ -1151,7 +1198,10 @@ function assetUrl(p: string) {
             ) : null}
           </div>
 
-          {/* Body (single scrollbar lives here)
+          {/* Panel toggle bar - sticky, doesn't scroll */}
+          <PanelToggleBar />
+
+          {/* Body (scrollable content) */}
           <div className="results-body">
             {visualItems.length === 0 && !terminal && !failed ? (
               <div className="flex items-center justify-center py-12 text-xs text-neutral-400">
@@ -1162,41 +1212,30 @@ function assetUrl(p: string) {
                 No media returned for this job.
               </div>
             ) : (
-              <PaddockVisualSummary items={visualItems} />
-              
-              
+              <DraggableLayout
+                itemKeys={
+                  [
+                    "visual-summary",
+                    ...(topoItems.length ? ["topography"] : []),
+                    "calendar",
+                    "ozwald-daily",
+                    "ozwald-8day",
+                    "silo-daily",
+                  ].filter((key) => visiblePanels[key])
+                }
+                isEditable={true}
+              >
+                {[
+                  visiblePanels["visual-summary"] && <PaddockVisualSummary key="visual-summary" items={visualItems} />,
+                  visiblePanels["topography"] && topoItems.length > 0 && <TopographyPanel key="topography" items={topoItems} />,
+                  visiblePanels["calendar"] && <CalendarPanel key="calendar" jobId={jobId} apiBase={API} />,
+                  visiblePanels["ozwald-daily"] && <OzwaldDailyPanel key="ozwald-daily" jobId={jobId} apiBase={API} />,
+                  visiblePanels["ozwald-8day"] && <Ozwald8DayPanel key="ozwald-8day" jobId={jobId} apiBase={API} />,
+                  visiblePanels["silo-daily"] && <SiloDailyPanel key="silo-daily" jobId={jobId} apiBase={API} />,
+                ].filter(Boolean)}
+              </DraggableLayout>
             )}
-          </div> */}
-          {/* Body (single scrollbar lives here) */}
-<div className="results-body">
-  {visualItems.length === 0 && !terminal && !failed ? (
-    <div className="flex items-center justify-center py-12 text-xs text-neutral-400">
-      No media yet. Still running…
-    </div>
-  ) : visualItems.length === 0 && terminal ? (
-    <div className="flex items-center justify-center py-12 text-xs text-neutral-400">
-      No media returned for this job.
-    </div>
-  ) : (
-    <DraggableLayout
-      itemKeys={
-        topoItems.length
-          ? ["visual-summary", "topography", "calendar", "ozwald-daily", "ozwald-8day", "silo-daily"]
-          : ["visual-summary", "calendar", "ozwald-daily", "ozwald-8day", "silo-daily"]
-      }
-      isEditable={true}
-    >
-      {[
-        <PaddockVisualSummary key="visual-summary" items={visualItems} />,
-        ...(topoItems.length ? [<TopographyPanel key="topography" items={topoItems} />] : []),
-        <CalendarPanel key="calendar" jobId={jobId} apiBase={API} />,
-        <OzwaldDailyPanel key="ozwald-daily" jobId={jobId} apiBase={API} />,
-        <Ozwald8DayPanel key="ozwald-8day" jobId={jobId} apiBase={API} />,
-        <SiloDailyPanel key="silo-daily" jobId={jobId} apiBase={API} />,
-      ]}
-    </DraggableLayout>
-  )}
-</div>
+          </div>
         </div>
       </div>
     </div>
