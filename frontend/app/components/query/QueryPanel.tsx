@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQueryState } from "./useQueryState";
 import { useRunJob } from "./useRunJob";
+import { useJobStatus } from "./useJobStatus";
 import CoordinateSection from "./CoordinateSection";
 import DateRangeSection from "./DateRangeSection";
 import SavedQueryDropdown from "./SavedQueryDropdown";
@@ -13,13 +15,19 @@ type Props = {
 
 export default function QueryPanel({ onSelectArea }: Props) {
   const state = useQueryState();
-  const { handleRun, status, error } = useRunJob(
+  const { handleRun, status, error, jobId, markDone } = useRunJob(
     state.selection,
-    state.verticesText,
-    state.bufferKm,
     state.startDate,
-    state.endDate
+    state.endDate,
+    state.queryName
   );
+  const { outputs, allDone } = useJobStatus(
+    status === "polling" || status === "done" ? jobId : null
+  );
+
+  useEffect(() => {
+    if (allDone && status === "polling") markDone();
+  }, [allDone, status, markDone]);
 
   const isSubmitting = status === "submitting";
 
@@ -62,11 +70,12 @@ export default function QueryPanel({ onSelectArea }: Props) {
           state.setQueryName(val);
           if (state.selectedQueryName) state.setSelectedQueryName(null);
         }}
-        onSave={state.handleSaveCurrent}
+        onSave={() => state.handleSaveCurrent(jobId)}
         onSelectArea={onSelectArea}
         onRun={handleRun}
         status={status}
         error={error}
+        outputs={status === "polling" || status === "done" ? outputs : null}
       />
     </div>
   );

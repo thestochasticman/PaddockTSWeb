@@ -11,4 +11,5 @@ export type SavedQuery = {
   verticesText: string;
   startDate: string;
   endDate: string;
+  stub: string | null;
 };

@@ -8,6 +8,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: paddock-backend
     environment:
+      HOME: /tmp
       PYTHONUNBUFFERED: "1"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       HDF5_USE_FILE_LOCKING: "FALSE"

@@ -1,18 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Selection } from "../types";
 import { BASE } from "../api";
-import { verticesStringToVertexList } from "../geo";
 
-type Status = "idle" | "submitting" | "done" | "error";
+export type Status = "idle" | "submitting" | "polling" | "done" | "error";
 
 export function useRunJob(
   selection: Selection | null,
-  verticesText: string,
-  bufferKm: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  stub: string
 ) {
   const abortRef = useRef<AbortController | null>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -26,13 +24,12 @@ export function useRunJob(
     setStatus("submitting");
     setError(null);
 
-    const body = {
-      vertices: verticesStringToVertexList(verticesText),
-      bbox: [selection.south, selection.west, selection.north, selection.east],
-      buffer_km: Number(bufferKm),
-      start_date: startDate,
-      end_date: endDate,
+    const body: Record<string, any> = {
+      bbox: [selection.west, selection.south, selection.east, selection.north],
+      start: startDate,
+      end: endDate,
     };
+    if (stub) body.stub = stub;
 
     const ac = new AbortController();
     abortRef.current = ac;
@@ -46,8 +43,8 @@ export function useRunJob(
       });
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
-      setJobId(json.job_id ?? json.jobId);
-      setStatus("done");
+      setJobId(json.job_id ?? json.jobId ?? json.stub);
+      setStatus("polling");
     } catch (err: any) {
       if (err?.name === "AbortError") return;
       console.error(err);
@@ -58,5 +55,7 @@ export function useRunJob(
     }
   }
 
-  return { handleRun, status, error, jobId };
+  const markDone = useCallback(() => setStatus("done"), []);
+
+  return { handleRun, status, error, jobId, markDone };
 }

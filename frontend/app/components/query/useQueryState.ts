@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Selection, SavedQuery } from "../types";
-import { STORAGE_KEY } from "../api";
+import { BASE } from "../api";
 import { bboxToVertices, verticesToBbox } from "../geo";
 import { getBBox, setBBox, subscribe, loadInitialBBox } from "../map/mapStore";
 
@@ -23,6 +23,29 @@ function sameBbox(a: Selection | null, b: Selection | null, eps = 1e-8): boolean
   );
 }
 
+// Backend uses snake_case, frontend uses camelCase
+function fromApi(raw: any): SavedQuery {
+  return {
+    name: raw.name,
+    bbox: raw.bbox,
+    verticesText: raw.vertices_text,
+    startDate: raw.start_date,
+    endDate: raw.end_date,
+    stub: raw.stub ?? null,
+  };
+}
+
+function toApi(q: SavedQuery) {
+  return {
+    name: q.name,
+    bbox: q.bbox,
+    vertices_text: q.verticesText,
+    start_date: q.startDate,
+    end_date: q.endDate,
+    stub: q.stub,
+  };
+}
+
 export function useQueryState() {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [verticesText, setVerticesText] = useState("");
@@ -33,7 +56,6 @@ export function useQueryState() {
 
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
   const [selectedQueryName, setSelectedQueryName] = useState<string | null>(null);
-  const [loadedFromStorage, setLoadedFromStorage] = useState(false);
   const [queryName, setQueryName] = useState("");
 
   const programmaticVerticesRef = useRef(false);
@@ -43,22 +65,17 @@ export function useQueryState() {
     setQueryName("");
   };
 
+  // Load saved queries from API on mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setSavedQueries(parsed as SavedQuery[]);
-      }
-    } catch {}
-    setLoadedFromStorage(true);
+    fetch(`${BASE}/queries`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSavedQueries(data.map(fromApi));
+      })
+      .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (!loadedFromStorage) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedQueries)); } catch {}
-  }, [savedQueries, loadedFromStorage]);
-
+  // Init bbox from localStorage or default
   useEffect(() => {
     const initial = loadInitialBBox() || DEFAULT_BBOX;
     programmaticVerticesRef.current = true;
@@ -66,6 +83,7 @@ export function useQueryState() {
     setVerticesText(bboxToVertices(initial));
   }, []);
 
+  // Subscribe to map-driven bbox changes
   useEffect(() => {
     const unsub = subscribe((bbox, source) => {
       if (source !== "map") return;
@@ -78,6 +96,7 @@ export function useQueryState() {
     return unsub;
   }, []);
 
+  // Parse vertices text → selection
   useEffect(() => {
     if (!verticesText.trim()) return;
     if (programmaticVerticesRef.current) {
@@ -90,6 +109,7 @@ export function useQueryState() {
     setSelectedQueryName(null);
   }, [verticesText, bufferKm]);
 
+  // Push selection → mapStore
   useEffect(() => {
     if (!selection) return;
     const current = getBBox();
@@ -100,22 +120,24 @@ export function useQueryState() {
   const handleStartDateChange = (value: string) => { setStartDate(value); setOpenPicker(null); markQueryDirty(); };
   const handleEndDateChange = (value: string) => { setEndDate(value); setOpenPicker(null); markQueryDirty(); };
 
-  const handleSaveCurrent = () => {
+  const handleSaveCurrent = async (stub?: string | null) => {
     const bbox = selection ?? verticesToBbox(verticesText, bufferKm);
     if (!bbox) { alert("Please provide at least one valid coordinate before saving."); return; }
-    const trimmedName = queryName.trim();
-    if (!trimmedName) { alert("Please enter a name for the query before saving."); return; }
-    const existing = savedQueries.find((sq) => sq.name === trimmedName);
-    if (!selectedQueryName && existing) { alert("A query with this name already exists."); return; }
-    if (selectedQueryName && trimmedName !== selectedQueryName && existing) { alert("Another query with this name already exists."); return; }
+    const name = queryName.trim() || stub;
+    if (!name) { alert("Run a job first or enter a name."); return; }
 
-    if (selectedQueryName) {
-      setSavedQueries((prev) => prev.map((sq) => sq.name === selectedQueryName ? { ...sq, name: trimmedName, bbox, verticesText, startDate, endDate } : sq));
-    } else {
-      setSavedQueries((prev) => [{ name: trimmedName, bbox, verticesText, startDate, endDate }, ...prev]);
-    }
-    setSelectedQueryName(trimmedName);
-    setQueryName(trimmedName);
+    const query: SavedQuery = { name, bbox, verticesText, startDate, endDate, stub: stub ?? null };
+    try {
+      const res = await fetch(`${BASE}/queries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toApi(query)),
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) setSavedQueries(data.map(fromApi));
+    } catch {}
+    setSelectedQueryName(name);
+    setQueryName(name);
   };
 
   const handleSelectSavedQuery = (name: string) => {
@@ -131,8 +153,12 @@ export function useQueryState() {
     setOpenPicker(null);
   };
 
-  const handleDeleteSavedQuery = (name: string) => {
-    setSavedQueries((prev) => prev.filter((sq) => sq.name !== name));
+  const handleDeleteSavedQuery = async (name: string) => {
+    try {
+      const res = await fetch(`${BASE}/queries/${encodeURIComponent(name)}`, { method: "DELETE" });
+      const data = await res.json();
+      if (Array.isArray(data)) setSavedQueries(data.map(fromApi));
+    } catch {}
     if (selectedQueryName === name) { setSelectedQueryName(null); setQueryName(""); }
   };
 

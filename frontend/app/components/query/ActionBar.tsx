@@ -1,14 +1,24 @@
 "use client";
 
+import type { OutputStatus } from "./useJobStatus";
+import type { Status } from "./useRunJob";
+
+const OUTPUT_LABELS: [keyof OutputStatus, string][] = [
+  ["sentinel2_video", "Sentinel-2"],
+  ["sentinel2_paddocks_video", "Sentinel-2 + Paddocks"],
+  ["vegfrac_video", "Vegetation Fraction"],
+  ["vegfrac_paddocks_video", "Veg. Fraction + Paddocks"],
+];
+
 type Props = {
   queryName: string;
   onQueryNameChange: (val: string) => void;
   onSave: () => void;
   onSelectArea: () => void;
   onRun: () => void;
-  status: "idle" | "submitting" | "done" | "error";
+  status: Status;
   error: string | null;
-  disabled?: boolean;
+  outputs?: OutputStatus | null;
 };
 
 export default function ActionBar({
@@ -19,8 +29,9 @@ export default function ActionBar({
   onRun,
   status,
   error,
+  outputs,
 }: Props) {
-  const isSubmitting = status === "submitting";
+  const isBusy = status === "submitting" || status === "polling";
 
   return (
     <div className="flex flex-col gap-2">
@@ -39,7 +50,7 @@ export default function ActionBar({
             type="button"
             className="crt-btn-ghost"
             onClick={onSave}
-            disabled={isSubmitting}
+            disabled={isBusy}
           >
             Save
           </button>
@@ -52,22 +63,62 @@ export default function ActionBar({
           type="button"
           className="crt-btn-ghost flex-1"
           onClick={onSelectArea}
-          disabled={isSubmitting}
+          disabled={isBusy}
         >
           Select Area
         </button>
         <button
           type="button"
-          className={isSubmitting ? "crt-btn-running flex-1" : "crt-btn-primary flex-1"}
+          className={isBusy ? "crt-btn-running flex-1" : "crt-btn-primary flex-1"}
           onClick={onRun}
-          disabled={isSubmitting}
+          disabled={isBusy}
         >
-          {isSubmitting ? "Running..." : "Run"}
+          {status === "submitting"
+            ? "Submitting..."
+            : status === "polling"
+              ? "Processing..."
+              : "Run"}
         </button>
       </div>
 
       {/* Status */}
       {error && <div className="crt-status crt-status--error">{error}</div>}
+
+      {/* Output checklist */}
+      {outputs && (
+        <div className="flex flex-col gap-1" style={{ marginTop: "0.25rem" }}>
+          <label className="crt-label">Outputs</label>
+          {OUTPUT_LABELS.map(([key, label]) => (
+            <div
+              key={key}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                fontSize: "0.75rem",
+                fontFamily: "monospace",
+              }}
+            >
+              <span
+                style={{
+                  color: outputs[key] ? "var(--green)" : "var(--text-muted)",
+                }}
+              >
+                {outputs[key] ? "[done]" : "[    ]"}
+              </span>
+              <span
+                style={{
+                  color: outputs[key]
+                    ? "var(--text-primary)"
+                    : "var(--text-secondary)",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

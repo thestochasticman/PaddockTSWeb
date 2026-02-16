@@ -47,7 +47,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Environment variables
 # - We assume your host Miniconda is mounted at /opt/conda
 # - And that the env PaddockTSEnv already exists there
-ENV PYTHONUNBUFFERED=1 \
+ENV HOME=/root \
+    PYTHONUNBUFFERED=1 \
     MPLBACKEND=Agg \
     PATH=/opt/conda/envs/PaddockTSEnv/bin:/opt/conda/bin:$PATH
 
@@ -56,6 +57,12 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
 WORKDIR /app
+
+# PaddockTS config — written to /tmp since container runs as user 1001
+RUN mkdir -p /tmp/.config && \
+    echo '{"out_dir": "/borevitz_projects/data/PaddockTSWeb", "tmp_dir": "/borevitz_projects/data/PaddockTSWeb"}' \
+    > /tmp/.config/PaddockTS.json && \
+    chmod -R 777 /tmp/.config
 
 # Copy backend code into the image
 COPY backend/ /app
