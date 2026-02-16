@@ -2,517 +2,285 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #0a0a0a;
+  --bg-panel: #111;
+  --bg-input: #080808;
+  --text-primary: #ddd;
+  --text-secondary: #777;
+  --text-muted: #444;
+  --border: #222;
+  --border-focus: #444;
+  --red: #c44;
+  --green: #6a2;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+::selection {
+  background: #fff;
+  color: #000;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #333; }
+
 @layer components {
-    
-    /* App shell – no scaling here */
-    .app-root {
-        @apply fixed inset-0 flex flex-col bg-neutral-900 text-neutral-200;
-    }
-    
-    .app-topbar {
-        @apply flex items-center justify-between border-b border-neutral-800 px-4 py-2 text-[25px];
-    }
-    
-    .app-title {
-        @apply text-neutral-400;
-    }
-    
-    .app-main {
-        @apply flex flex-1 min-h-0;
-    }
-    
-    /* .app-main-left {
-        @apply w-[150px] border-r border-neutral-800;
-    }
-    
-    .app-main-right {
-        @apply flex-1 relative;
-    }
-     */
 
-     /* YOU USE app-left in JSX, so style app-left */
-    .app-left {
-    @apply min-h-0 shrink-0 overflow-hidden; /* map-panel-root controls width */
-    }
-
-    /* Right side needs min-h-0 and overflow hidden */
-    .app-main-right {
-    @apply flex-1 min-h-0 min-w-0 relative overflow-hidden;
-    }
-    /* Toggle – no scaling, fixed text size */
-    .toggle-root {
-        @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 text-[20px];
-    }
-    
-    .toggle-button {
-        @apply px-3 py-1 transition-colors;
-    }
-    
-    .toggle-button--spaced {
-        @apply ml-1;
-    }
-    
-    .toggle-button--active {
-        @apply bg-neutral-200 text-neutral-950;
-    }
-    
-    .toggle-button--inactive {
-        @apply text-neutral-300 hover:bg-neutral-800;
-    }
-    
-    .toggle-button--disabled {
-        @apply text-neutral-500 cursor-not-allowed;
-    }
-    
-    
-    /* Date picker – structure only, sizes use em so they scale with parent */
-    .date-root {
-        @apply relative;
-        /* no font-size here; will inherit from parent (map panel or elsewhere) */
-    }
-    .date-input {
-        @apply bg-neutral-950 border border-neutral-700 text-neutral-100
-            focus:outline-none focus:ring-1 focus:ring-neutral-500;
-        padding: 0;        /* no padding: box just hugs the date text */
-        font-size: 1em;    /* inherits scale from parent (e.g. map-panel-root) */
-        line-height: 1.2;
-        width: 50%;
+  .crt-root {
+    @apply fixed inset-0 flex flex-col;
+    background: var(--bg);
   }
 
-    .date-input-wrapper {
-        @apply relative;
-    }
-    
-    .date-icon-button {
-        @apply absolute inset-y-0 right-1 flex items-center text-xs text-neutral-300 hover:text-neutral-100;
-    }
-    
-    .date-popup {
-        @apply absolute z-50 mt-1 bg-neutral-950 border border-neutral-700 shadow-lg p-2;
-        width: 16em; /* em → relative to parent font size */
-    }
-    
-    .date-header {
-        @apply flex items-center justify-between mb-2;
-    }
-    
-    .date-nav-button {
-        @apply px-1 py-0.5 hover:bg-neutral-800 text-neutral-300;
-        font-size: 0.9em;
-    }
-    
-    .date-select {
-        @apply bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none;
-        font-size: 0.85em;
-        padding: 0.15em 0.35em;
-    }
-    
-    .date-weekdays-row {
-        @apply grid grid-cols-7 gap-1 mb-1;
-    }
-    
-    .date-weekday {
-        @apply text-center text-neutral-500;
-        font-size: 0.7em;
-    }
-    
-    .date-days-grid {
-        @apply grid grid-cols-7 gap-1;
-    }
-    
-    .date-day-base {
-        @apply flex items-center justify-center;
-        width: 2em;
-        height: 2em;
-        font-size: 0.9em;
-    }
-    
-    .date-day {
-        @apply text-neutral-200 hover:bg-neutral-800;
-    }
-    
-    .date-day-selected {
-        @apply bg-neutral-100 text-neutral-900;
-    }
-    /* ---------- Map panel (only thing that scales) ---------- */
-    
-    .map-panel-root {
-        /* @apply h-full w-full bg-neutral-900 border-r border-neutral-700
-        px-4 py-3 text-neutral-200
-        flex flex-col space-y-4 overflow-hidden; */
-        
-        @apply h-full bg-neutral-900 border-r border-neutral-700
-        px-4 py-3 text-neutral-200 flex flex-col space-y-4 overflow-hidden;
-        
-        /* Scale knob **only for this panel** */
-        --map-panel-scale:1.5;              /* change this to 1.1, 1.2, etc */
-        font-size: calc(11px * var(--map-panel-scale));
-        line-height: 1.4;
-        
-        width: calc(22rem * var(--map-panel-scale));
-        
-    } 
-    
-    
-    
-    
-    /* field-label inside map panel scales with the panel font size */
-    .map-panel-root .map-field-label {
-        font-size: 1em;
-    }
-    
-    /* Date picker inside map panel scales too (because date-root inherits) */
-    .map-panel-root .date-root {
-        font-size: 1em; /* relative to map-panel-root base */
-    }
-    
-    /* Map-panel-specific field styles (you'll use these in TSX) */
-    
-    .map-panel-root .map-field-input {
-        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
-        focus:outline-none focus:ring-1 focus:ring-neutral-500;
-        font-size: 0.9em;
-        padding: 0.45em 0.75em;
-    }
-    
-    .map-panel-root .map-query-name-row {
-        @apply flex gap-2;
-    }
-    
-    .map-panel-root .map-query-name-input {
-        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
-        focus:outline-none focus:ring-1 focus:ring-neutral-500 flex-1;
-        font-size: 1em;
-        padding: 0.45em 0.75em;
-    }
-    
-    .map-panel-root .map-query-save-button {
-        @apply border border-neutral-600 text-neutral-100 hover:bg-neutral-800 whitespace-nowrap;
-        font-size: 0.95em;
-        padding: 0.45em 0.9em;
-    }
-    
-    .map-panel-root .map-bbox-list {
-        @apply space-y-1 font-mono text-neutral-100;
-        font-size: 0.95em;
-    }
-    
-    .map-panel-root .map-bbox-row {
-        @apply flex items-baseline gap-4;
-    }
-    
-    .map-panel-root .map-bbox-label {
-        @apply text-neutral-400;
-    }
-    
-    .map-panel-root .map-bbox-empty {
-        @apply text-neutral-500;
-        font-size: 0.85em;
-    }
-    
-    .map-panel-root .map-vertices-textarea {
-        @apply w-full bg-neutral-950 border border-neutral-700 text-neutral-100
-        focus:outline-none focus:ring-1 focus:ring-neutral-500
-        font-mono resize-none;
-        font-size: 1em;
-        padding: 0.45em 0.75em;
-    }
-    
-    .map-panel-root .map-vertices-help {
-        @apply text-neutral-500;
-        font-size: 0.85em;
-    }
-    
-    .map-panel-root .map-time-window-grid {
-        @apply grid grid-cols-3 gap-16;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-        align-items: end;
+  .crt-topbar {
+    @apply flex items-center justify-between px-5 py-2.5;
+    border-bottom: 1px solid var(--border);
+  }
 
-    }
-    
-    .map-panel-root .map-panel-footer {
-        @apply flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-800 mt-2;
-    }
-    
-    .map-panel-root .map-select-area-button {
-        @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
-        @apply w-auto;
-        /* @apply h-11; */
-        font-size: 0.95em;
-        padding: 0.45em 0.9em;
-    }
-    
-    .map-panel-root .map-run-button {
+  .crt-logo {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-        @apply border;
-        @apply max-w-fit;
-        font-size: 0.95em;
-        padding: 0.45em 0.9em;
-    }
-    
-    .map-panel-root .map-run-button--running {
-        @apply bg-neutral-700 border-neutral-600 cursor-not-allowed text-neutral-300;
-    }
-    
-    .map-panel-root .map-run-button--idle {
-        @apply bg-neutral-200 border-neutral-400 text-neutral-950 hover:bg-neutral-400;
-    }
-    
-    .map-panel-root .map-status-text {
-        @apply min-h-[1.25rem];
-        font-size: 0.85em;
-    }
-    
-    .map-panel-root .map-status-text--running {
-        @apply text-yellow-400 animate-pulse;
-    }
-    
-    .map-panel-root .map-status-text--done {
-        @apply text-green-400;
-    }
-    
-    .map-panel-root .map-status-text--error {
-        @apply text-red-400;
-    }
-    
-    .map-panel-root .map-saved-queries-section {
-        /* @apply pt-2 border-t border-neutral-800 mt-2 */
-        /* @apply pt-2 border-t border-neutral-800 mt-2; */
-        /* flex-1 flex flex-col min-h-0; */
-          @apply pt-2 border-t border-neutral-800 mt-2;
-        /* this makes the whole section grow to fill the remaining height */
-        /* @apply flex flex-col flex-1 min-h-0; */
-            @apply flex flex-col flex-1 min-h-0;
-    }
-    
-    .map-panel-root .map-saved-queries-header {
-        @apply flex items-center justify-between mb-1;
-    }
-    
-    .map-panel-root .map-saved-queries-count {
-        @apply text-neutral-500;
-        font-size: 0.8em;
-    }
-    
-    .map-panel-root .map-saved-queries-container {
-        
-        @apply border border-neutral-700 bg-neutral-950 overflow-y-auto;
-        /* let it grow until near bottom of viewport, then scroll */
-        max-height: 100%; /* tweak 260px until it visually hits the bottom */
-    }
-    
-    .map-panel-root .map-saved-queries-empty {
-        @apply px-2 py-2 text-neutral-500;
-        font-size: 0.85em;
-    }
-    
-    .map-panel-root .map-saved-queries-list {
-        @apply divide-y divide-neutral-800;
-        font-size: 0.95em;
-    }
-    
-    .map-panel-root .map-saved-query-row {
-        @apply flex items-center justify-between px-2 py-1.5;
-    }
-    
-    .map-panel-root .map-saved-query-button {
-        @apply flex-1 text-left hover:bg-neutral-800;
-    }
-    
-    .map-panel-root .map-saved-query-button--selected {
-        @apply bg-neutral-800;
-    }
-    
-    .map-panel-root .map-saved-query-name {
-        @apply truncate text-neutral-100;
-    }
-    
-    .map-panel-root .map-saved-query-delete {
-        @apply ml-2 text-neutral-500 hover:text-red-400;
-        font-size: 1.2em;
-    }
+  .crt-main {
+    @apply flex flex-1 min-h-0;
+  }
 
-    /* ---------- PaddockVisualSummary ---------- */
+  .crt-map-container {
+    @apply flex-1 min-h-0 min-w-0 relative overflow-hidden;
+  }
 
-    .pv-root {
-    @apply w-full space-y-3 min-h-0 text-neutral-200;
-    /* map-panel-ish: simple, tight, readable */
-    font-size: 14px;
-    line-height: 1.4;
-    }
+  /* Toggle */
+  .toggle-root {
+    @apply inline-flex items-center;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
 
-    .pv-header {
-    @apply flex items-center justify-between gap-2;
-    }
+  .toggle-button {
+    @apply px-3 py-1 transition-colors duration-100;
+  }
 
-    .pv-title {
-    @apply font-semibold text-neutral-200;
-    font-size: 1.2em;
-    }
+  .toggle-button--spaced { @apply ml-0; }
 
-    .pv-subtitle {
-    @apply text-neutral-400;
-    font-size: 1em;
-    }
+  .toggle-button--active {
+    background: #fff;
+    color: #000;
+  }
 
-    /* IMPORTANT: do NOT scroll here (Body already scrolls) */
-    .pv-shell {
-    @apply border border-neutral-800 bg-neutral-950/80 p-2;
-    overflow: visible;
-    }
+  .toggle-button--inactive {
+    color: var(--text-secondary);
+  }
+  .toggle-button--inactive:hover {
+    color: var(--text-primary);
+  }
 
-    /* Grid wrapper */
-    .pv-grid {
-    @apply w-full;
-    }
+  .toggle-button--disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
 
-    .pv-grid-item {
-    @apply overflow-hidden h-full;
-    }
+  /* Panel */
+  .crt-panel {
+    @apply h-full flex flex-col overflow-y-auto;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    width: 360px;
+    padding: 1rem 1.25rem;
+    gap: 0.875rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
 
-    /* Card (no rounded) */
-    .pv-card {
-    @apply w-full h-full border border-neutral-800 bg-neutral-950 flex flex-col overflow-hidden shadow-sm;
-    }
+  /* Form */
+  .crt-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
 
-    /* Drag handle + title row */
-    .pv-card-handle {
-    @apply cursor-move select-none border-b border-neutral-800 flex items-center justify-between gap-2;
-    padding: 0.45em 0.75em; /* like map-panel inputs */
-    }
+  .crt-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    transition: border-color 0.15s;
+  }
+  .crt-input:focus {
+    border-color: var(--border-focus);
+    outline: none;
+  }
+  .crt-input::placeholder { color: var(--text-muted); }
 
-    .pv-card-left {
-    @apply flex items-center gap-2 min-w-0;
-    }
+  .crt-textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    resize: none;
+    transition: border-color 0.15s;
+  }
+  .crt-textarea:focus {
+    border-color: var(--border-focus);
+    outline: none;
+  }
+  .crt-textarea::placeholder { color: var(--text-muted); }
 
-    .pv-dot {
-    @apply inline-flex h-2 w-2 rounded-full bg-emerald-400;
-    }
+  .crt-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
+    transition: border-color 0.15s;
+  }
+  .crt-select:focus {
+    border-color: var(--border-focus);
+    outline: none;
+  }
 
-    .pv-card-title {
-    @apply font-semibold text-neutral-100 truncate;
-    font-size: 1.1em;
-    }
+  /* Buttons */
+  .crt-btn-primary {
+    background: #fff;
+    color: #000;
+    border: 1px solid #fff;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .crt-btn-primary:hover { opacity: 0.85; }
+  .crt-btn-primary:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 
-    .pv-card-kind {
-    @apply text-neutral-400;
-    font-size: 1em;
-    }
+  .crt-btn-ghost {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .crt-btn-ghost:hover { border-color: var(--border-focus); }
+  .crt-btn-ghost:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 
-    /* Media */
-    .pv-media {
-    @apply flex-1 min-h-0 relative bg-black;
-    }
+  .crt-btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .crt-btn-danger:hover { border-color: var(--red); }
 
-    .pv-media-fill {
-    @apply absolute inset-0 w-full h-full object-contain;
-    }
+  .crt-btn-running {
+    background: var(--text-muted);
+    color: var(--bg);
+    border: 1px solid var(--text-muted);
+    cursor: not-allowed;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
 
-    /* ---------- react-grid-layout / react-resizable theming ---------- */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
 
-    .pv-shell .react-grid-placeholder {
-    background: rgba(82, 82, 82, 0.25) !important;
-    border: 1px dashed #404040 !important;
-    border-radius: 0 !important; /* no rounded */
-    }
+  /* Status */
+  .crt-status { font-size: 0.7rem; min-height: 1rem; }
+  .crt-status--running { color: var(--text-secondary); }
+  .crt-status--done { color: var(--green); }
+  .crt-status--error { color: var(--red); }
 
-    .pv-shell .react-resizable-handle {
-    background-image: none !important;
-    width: 18px;
-    height: 18px;
-    padding: 0;
-    opacity: 0.9;
-    }
+  /* Help / Divider */
+  .crt-help { font-size: 0.65rem; color: var(--text-muted); line-height: 1.4; }
+  .crt-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
 
-    .pv-shell .react-resizable-handle::after {
-    content: "";
-    position: absolute;
-    right: 4px;
-    bottom: 4px;
-    width: 10px;
-    height: 10px;
-    border-right: 2px solid #404040;
-    border-bottom: 2px solid #404040;
-    border-radius: 0;
-    }
-    .pv-shell {
-        @apply border border-neutral-800 bg-neutral-950/80 p-2;
-        overflow: visible;
-    }
-    .pv-grid-wrap {
-  @apply relative;
+  /* Date picker */
+  .date-root { @apply relative; }
+  .date-input-wrapper { @apply relative; }
+
+  .date-icon-button {
+    @apply absolute inset-y-0 right-1 flex items-center;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+  .date-icon-button:hover { color: var(--text-primary); }
+
+  .date-popup {
+    @apply absolute z-50 mt-1 p-2;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-focus);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    width: 16em;
+  }
+
+  .date-header { @apply flex items-center justify-between mb-2; }
+
+  .date-nav-button {
+    @apply px-1 py-0.5;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+  }
+  .date-nav-button:hover { color: var(--text-primary); }
+
+  .date-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.75em;
+    padding: 0.15em 0.35em;
+  }
+  .date-select:focus { outline: none; border-color: var(--border-focus); }
+
+  .date-weekdays-row { @apply grid grid-cols-7 gap-1 mb-1; }
+  .date-weekday { @apply text-center; color: var(--text-muted); font-size: 0.65em; }
+
+  .date-days-grid { @apply grid grid-cols-7 gap-1; }
+
+  .date-day-base {
+    @apply flex items-center justify-center;
+    width: 2em;
+    height: 2em;
+    font-size: 0.8em;
+  }
+
+  .date-day { color: var(--text-secondary); }
+  .date-day:hover { color: var(--text-primary); }
+
+  .date-day-selected {
+    background: #fff;
+    color: #000;
+  }
+
 }
-
-
-    /* ---------- Results page layout ---------- */
-
-.results-main {
-  @apply flex flex-1 min-h-0 min-w-0;
-}
-
-.results-pane {
-  @apply flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden;
-}
-
-.results-header {
-  @apply shrink-0 border-b border-neutral-800 px-4 py-3;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.results-title-row {
-  @apply flex items-baseline justify-between gap-3;
-}
-
-.results-title {
-  @apply text-neutral-100 font-semibold truncate;
-  font-size: 1.3em;
-}
-
-.results-header-right {
-  @apply flex items-center gap-2;
-}
-
-.results-meta-row {
-  @apply flex flex-wrap gap-x-4 gap-y-1 text-neutral-300;
-  font-size: 0.95em;
-}
-
-.results-meta-label {
-  @apply uppercase tracking-wide text-neutral-400 mr-1;
-}
-
-.results-meta-mono {
-  @apply font-mono;
-}
-
-.results-body {
-  @apply flex-1 min-h-0 overflow-auto px-4 py-4;
-}
-
-/* Panel toggle bar - sticky, doesn't scroll with content */
-.panel-toggle-bar {
-  @apply shrink-0 flex items-center px-4 py-3 border-b border-neutral-800 bg-neutral-900;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.panel-toggle-group {
-  @apply inline-flex items-center bg-neutral-900 border border-neutral-700 p-1 gap-1;
-  font-size: 20px;
-}
-
-.panel-toggle-btn {
-  @apply px-3 py-1 transition-colors;
-}
-
-.panel-toggle-btn-active {
-  @apply bg-neutral-200 text-neutral-950;
-}
-
-.panel-toggle-btn:not(.panel-toggle-btn-active) {
-  @apply text-neutral-300 hover:bg-neutral-800;
-}
-
-} /* end @layer components */

@@ -1,5 +1,9 @@
-"use client";
-import { Selection } from "./Selection";
+export type Selection = {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
 
 export type SavedQuery = {
   name: string;

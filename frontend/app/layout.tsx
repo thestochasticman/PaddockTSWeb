@@ -1,32 +1,21 @@
 import "./globals.css";
-import "react-grid-layout/css/styles.css";
-import "react-resizable/css/styles.css";
+import { Inter } from "next/font/google";
 import type { Metadata } from "next";
-import Link from "next/link";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "PaddockTS Web",
-  description: "Black / Red / Green theme",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <body>
-        <div className="container py-8">
-          <header className="mb-8 flex items-center justify-between">
-            <h1 className="text-2xl gradient-title"></h1>
-            <nav className="space-x-2">
-              {/* <Link className="btn btn-red" href="/">Home</Link> */}
-              {/* <Link className="btn btn-green" href="/about">About</Link> */}
-            </nav>
-          </header>
-          {children}
-          <footer className="mt-12 text-sm" style={{color: "var(--muted)"}}>
-            {/* Prototype • Next.js + FastAPI */}
-          </footer>
-        </div>
-      </body>
+    <html lang="en" className={inter.className}>
+      <body>{children}</body>
     </html>
   );
 }
