@@ -36,7 +36,6 @@ class RunRequest(BaseModel):
     end: str
     stub: Optional[str] = None
 
-
 class SavedQueryModel(BaseModel):
     name: str
     bbox: dict
@@ -45,19 +44,16 @@ class SavedQueryModel(BaseModel):
     end_date: str
     stub: Optional[str] = None
 
-
 @app.get("/queries")
 def list_queries():
     return _load_queries()
-
 
 @app.post("/queries")
 def save_query(q: SavedQueryModel):
     queries = _load_queries()
     queries = [x for x in queries if x["name"] != q.name]
-    queries.append(q.dict())
+    queries.append(q.model_dump())
     return _save_queries(queries)
-
 
 @app.delete("/queries/{name}")
 def delete_query(name: str):

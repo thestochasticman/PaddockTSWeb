@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { OutputStatus } from "./useJobStatus";
 import type { Status } from "./useRunJob";
 
@@ -19,6 +20,7 @@ type Props = {
   status: Status;
   error: string | null;
   outputs?: OutputStatus | null;
+  jobId?: string | null;
 };
 
 export default function ActionBar({
@@ -30,6 +32,7 @@ export default function ActionBar({
   status,
   error,
   outputs,
+  jobId,
 }: Props) {
   const isBusy = status === "submitting" || status === "polling";
 
@@ -118,6 +121,18 @@ export default function ActionBar({
             </div>
           ))}
         </div>
+      )}
+
+      {/* View Results link */}
+      {jobId && (status === "polling" || status === "done") && (
+        <Link href={`/results/${jobId}`} className="crt-btn-primary" style={{
+          display: "block",
+          textAlign: "center",
+          textDecoration: "none",
+          marginTop: "0.25rem",
+        }}>
+          View Results
+        </Link>
       )}
     </div>
   );

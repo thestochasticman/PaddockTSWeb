@@ -76,6 +76,7 @@ export default function QueryPanel({ onSelectArea }: Props) {
         status={status}
         error={error}
         outputs={status === "polling" || status === "done" ? outputs : null}
+        jobId={jobId}
       />
     </div>
   );
