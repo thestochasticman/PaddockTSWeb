@@ -44,6 +44,7 @@ const POLL_MS = 4000;
 export default function ResultsPage() {
   const { stub } = useParams<{ stub: string }>();
   const [outputs, setOutputs] = useState<OutputStatus>(EMPTY);
+  const [videoScale, setVideoScale] = useState(100);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const videoDone =
@@ -134,9 +135,32 @@ export default function ResultsPage() {
       )}
 
       <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        marginBottom: "0.5rem",
+        fontSize: "0.65rem",
+        fontFamily: "monospace",
+        color: "var(--text-secondary)",
+      }}>
+        <span>Video size</span>
+        <input
+          type="range"
+          min={30}
+          max={100}
+          value={videoScale}
+          onChange={(e) => setVideoScale(Number(e.target.value))}
+          style={{ width: "120px", accentColor: "var(--text-secondary)" }}
+        />
+        <span>{videoScale}%</span>
+      </div>
+
+      <div style={{
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
-        gap: "1rem",
+        gap: "0.75rem",
+        maxWidth: `${videoScale}%`,
+        margin: "0 auto",
       }}>
         {VIDEOS.map(([key, suffix, label]) => (
           <div key={key}>
@@ -154,6 +178,11 @@ export default function ResultsPage() {
             {outputs[key] ? (
               <video
                 controls
+                onLoadedMetadata={(e) => {
+                  const v = e.currentTarget;
+                  v.playbackRate = 0.25;
+                  v.defaultPlaybackRate = 0.25;
+                }}
                 style={{
                   width: "100%",
                   background: "#000",
