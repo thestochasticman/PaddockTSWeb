@@ -27,10 +27,10 @@ export const SILO_GROUPS: Record<string, PlotGroupConfig> = {
     colors: ["#f90"],
   },
   evapotranspiration: {
-    vars: ["et_short_crop", "evap_pan"],
+    vars: ["et_short_crop"],
     ylabel: "ET (mm)",
     title: "Evapotranspiration",
-    colors: ["#5b4", "#2a8"],
+    colors: ["#c84"],
   },
   humidity: {
     vars: ["vp_deficit", "vp"],
