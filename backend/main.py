@@ -1,3 +1,5 @@
+from PaddockTS.Environmental.OzWALD.download_ozwald_daily import download_ozwald_daily
+from PaddockTS.Environmental.SILO.download_silo import download_silo
 from PaddockTS.sentinel2_to_paddock_pipeline import run as run_pipeline
 from fastapi.staticfiles import StaticFiles
 from fastapi import BackgroundTasks
@@ -9,6 +11,9 @@ from os.path import exists
 from typing import Optional
 from datetime import date
 from pathlib import Path
+import pandas as pd
+import traceback
+import threading
 import json
 import os
 
@@ -60,12 +65,37 @@ def delete_query(name: str):
     return _save_queries(queries)
 
 
+def run_environmental(query: Query):
+    try:
+        download_silo(query)
+    except Exception:
+        traceback.print_exc()
+    try:
+        download_ozwald_daily(query)
+    except Exception:
+        traceback.print_exc()
+
+
+def _read_csv_as_json(path: str, date_col: str):
+    if not exists(path):
+        return {"error": "not ready", "dates": [], "columns": {}}
+    df = pd.read_csv(path, parse_dates=[date_col])
+    dates = df[date_col].dt.strftime("%Y-%m-%d").tolist()
+    columns = {}
+    for col in df.columns:
+        if col == date_col:
+            continue
+        columns[col] = df[col].where(df[col].notna(), None).tolist()
+    return {"dates": dates, "columns": columns}
+
+
 @app.post("/run")
 def run_job(req: RunRequest, background_tasks: BackgroundTasks):
     kwargs = dict(bbox=req.bbox, start=date.fromisoformat(req.start), end=date.fromisoformat(req.end))
     if req.stub:
         kwargs["stub"] = req.stub
     query = Query(**kwargs)
+    threading.Thread(target=run_environmental, args=(query,), daemon=True).start()
     background_tasks.add_task(run_pipeline, query)
     return {"stub": query.stub}
 
@@ -73,10 +103,29 @@ def run_job(req: RunRequest, background_tasks: BackgroundTasks):
 @app.get("/status/{stub}")
 def get_status(stub: str):
     out = f"{config.out_dir}/{stub}"
+    tmp = f"{config.tmp_dir}/{stub}"
+    env = f"{tmp}/Environmental"
     s = stub
     return {
+        "sentinel2_download": exists(f"{tmp}/{s}_sentinel2.zarr"),
+        "vegfrac_compute": exists(f"{tmp}/{s}_vegfrac.zarr"),
+        "paddock_segment": exists(f"{tmp}/{s}_paddocks.gpkg"),
         "sentinel2_video": exists(f"{out}/{s}_sentinel2.mp4"),
         "sentinel2_paddocks_video": exists(f"{out}/{s}_sentinel2_paddocks.mp4"),
         "vegfrac_video": exists(f"{out}/{s}_vegfrac.mp4"),
         "vegfrac_paddocks_video": exists(f"{out}/{s}_vegfrac_paddocks.mp4"),
+        "silo_ready": exists(f"{env}/{s}_silo.csv"),
+        "ozwald_daily_ready": exists(f"{env}/{s}_ozwald_daily.csv"),
     }
+
+
+@app.get("/data/{stub}/silo")
+def get_silo_data(stub: str):
+    path = f"{config.tmp_dir}/{stub}/Environmental/{stub}_silo.csv"
+    return _read_csv_as_json(path, "YYYY-MM-DD")
+
+
+@app.get("/data/{stub}/ozwald_daily")
+def get_ozwald_daily_data(stub: str):
+    path = f"{config.tmp_dir}/{stub}/Environmental/{stub}_ozwald_daily.csv"
+    return _read_csv_as_json(path, "time")

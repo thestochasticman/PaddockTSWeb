@@ -50,6 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV HOME=/root \
     PYTHONUNBUFFERED=1 \
     MPLBACKEND=Agg \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     PATH=/opt/conda/envs/PaddockTSEnv/bin:/opt/conda/bin:$PATH
 
 # Optional: set locale to avoid some Python / lib issues

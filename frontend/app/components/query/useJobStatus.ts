@@ -4,17 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import { BASE } from "../api";
 
 export type OutputStatus = {
+  sentinel2_download: boolean;
+  vegfrac_compute: boolean;
+  paddock_segment: boolean;
   sentinel2_video: boolean;
   sentinel2_paddocks_video: boolean;
   vegfrac_video: boolean;
   vegfrac_paddocks_video: boolean;
+  silo_ready: boolean;
+  ozwald_daily_ready: boolean;
 };
 
 const EMPTY: OutputStatus = {
+  sentinel2_download: false,
+  vegfrac_compute: false,
+  paddock_segment: false,
   sentinel2_video: false,
   sentinel2_paddocks_video: false,
   vegfrac_video: false,
   vegfrac_paddocks_video: false,
+  silo_ready: false,
+  ozwald_daily_ready: false,
 };
 
 const POLL_MS = 4000;

@@ -5,10 +5,15 @@ import type { OutputStatus } from "./useJobStatus";
 import type { Status } from "./useRunJob";
 
 const OUTPUT_LABELS: [keyof OutputStatus, string][] = [
-  ["sentinel2_video", "Sentinel-2"],
-  ["sentinel2_paddocks_video", "Sentinel-2 + Paddocks"],
-  ["vegfrac_video", "Vegetation Fraction"],
-  ["vegfrac_paddocks_video", "Veg. Fraction + Paddocks"],
+  ["sentinel2_download", "Sentinel-2 Download"],
+  ["vegfrac_compute", "Vegetation Fraction Compute"],
+  ["paddock_segment", "Paddock Segmentation"],
+  ["sentinel2_video", "Sentinel-2 Video"],
+  ["sentinel2_paddocks_video", "Sentinel-2 + Paddocks Video"],
+  ["vegfrac_video", "Veg. Fraction Video"],
+  ["vegfrac_paddocks_video", "Veg. Fraction + Paddocks Video"],
+  ["silo_ready", "SILO Climate Data"],
+  ["ozwald_daily_ready", "OzWALD Daily Data"],
 ];
 
 type Props = {
