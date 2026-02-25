@@ -1,14 +1,14 @@
 from PaddockTS.sentinel2_to_paddock_pipeline import run as run_pipeline
-from PaddockTS.config import config
-from PaddockTS.query import Query
 from fastapi.staticfiles import StaticFiles
 from fastapi import BackgroundTasks
+from PaddockTS.config import config
+from PaddockTS.query import Query
 from pydantic import BaseModel
 from fastapi import FastAPI
 from os.path import exists
 from typing import Optional
-from pathlib import Path
 from datetime import date
+from pathlib import Path
 import json
 import os
 
@@ -16,12 +16,10 @@ os.makedirs(config.out_dir, exist_ok=True)
 
 QUERIES_FILE = Path(config.out_dir) / "saved_queries.json"
 
-
 def _load_queries() -> list:
     if QUERIES_FILE.exists():
         return json.loads(QUERIES_FILE.read_text())
     return []
-
 
 def _save_queries(queries: list) -> list:
     QUERIES_FILE.write_text(json.dumps(queries, indent=2))

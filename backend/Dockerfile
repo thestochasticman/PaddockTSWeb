@@ -60,7 +60,7 @@ WORKDIR /app
 
 # PaddockTS config — written to /tmp since container runs as user 1001
 RUN mkdir -p /tmp/.config && \
-    echo '{"out_dir": "/borevitz_projects/data/PaddockTSWeb", "tmp_dir": "/borevitz_projects/data/PaddockTSWeb"}' \
+    echo '{"out_dir": "/borevitz_projects/data/PaddockTSWeb", "tmp_dir": "/borevitz_projects/data/PaddockTSWeb", "email": "yasaradeel@gmail.com", "tern_api_key": "VjBCeUNPcldRYzdWaE9RbS4ybnRURCFKSTFuV3BcYlRhcCU5dls2Vzd8VlY9TURrZU9MdE1bOHcqeiEsYz5jV1RBOXshWX0qLWhWRDhiRi9O"}' \
     > /tmp/.config/PaddockTS.json && \
     chmod -R 777 /tmp/.config
 
