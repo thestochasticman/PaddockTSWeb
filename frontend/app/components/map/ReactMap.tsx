@@ -29,7 +29,7 @@ const ReactMap = forwardRef<ReactMapHandle>(function ReactMap(_props, ref) {
     <Map
       defaultCenter={{ lat: -33.5, lng: 148.5 }}
       defaultZoom={5}
-      mapTypeId="terrain"
+      mapTypeId="hybrid"
       gestureHandling="greedy"
       className="w-full h-full"
       disableDefaultUI={false}
