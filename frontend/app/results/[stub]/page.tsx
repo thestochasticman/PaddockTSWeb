@@ -20,11 +20,17 @@ type OutputStatus = {
   ozwald_daily_ready: boolean;
 };
 
-const VIDEOS: [keyof OutputStatus, string, string][] = [
-  ["sentinel2_video", "sentinel2", "Sentinel-2"],
-  ["sentinel2_paddocks_video", "sentinel2_paddocks", "Sentinel-2 + Paddocks"],
-  ["vegfrac_video", "vegfrac", "Vegetation Fraction"],
-  ["vegfrac_paddocks_video", "vegfrac_paddocks", "Veg. Fraction + Paddocks"],
+type VideoEntry = {
+  key: keyof OutputStatus;
+  file: (stub: string) => string;
+  label: string;
+};
+
+const VIDEOS: VideoEntry[] = [
+  { key: "sentinel2_video",          file: (s) => `${s}_sentinel2.mp4`,                          label: "Sentinel-2" },
+  { key: "sentinel2_paddocks_video", file: ()  => `sam_paddocks_sentinel2_paddocks.mp4`,         label: "Sentinel-2 + Paddocks" },
+  { key: "vegfrac_video",            file: (s) => `${s}_fractional_cover.mp4`,                   label: "Vegetation Fraction" },
+  { key: "vegfrac_paddocks_video",   file: ()  => `sam_paddocks_fractional_cover_paddocks.mp4`,  label: "Veg. Fraction + Paddocks" },
 ];
 
 const EMPTY: OutputStatus = {
@@ -162,7 +168,7 @@ export default function ResultsPage() {
         maxWidth: `${videoScale}%`,
         margin: "0 auto",
       }}>
-        {VIDEOS.map(([key, suffix, label]) => (
+        {VIDEOS.map(({ key, file, label }) => (
           <div key={key}>
             <label style={{
               display: "block",
@@ -188,7 +194,7 @@ export default function ResultsPage() {
                   background: "#000",
                   border: "1px solid var(--border)",
                 }}
-                src={`${BASE}/static/${stub}/${stub}_${suffix}.mp4`}
+                src={`${BASE}/static/${stub}/${file(stub)}`}
               />
             ) : (
               <div style={{

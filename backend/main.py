@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks
 from PaddockTS.config import config
 from PaddockTS.query import Query
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from os.path import exists
 from typing import Optional
 from datetime import date
@@ -14,6 +14,7 @@ from pathlib import Path
 import pandas as pd
 import traceback
 import threading
+import fcntl
 import json
 import os
 
@@ -94,28 +95,62 @@ def run_job(req: RunRequest, background_tasks: BackgroundTasks):
     kwargs = dict(bbox=req.bbox, start=date.fromisoformat(req.start), end=date.fromisoformat(req.end))
     if req.stub:
         kwargs["stub"] = req.stub
-    query = Query(**kwargs)
+    try:
+        query = Query(**kwargs)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     threading.Thread(target=run_environmental, args=(query,), daemon=True).start()
     background_tasks.add_task(run_pipeline, query)
     return {"stub": query.stub}
 
 
+def _lookup_query_hashes(stub: str) -> Optional[tuple[str, str]]:
+    if not exists(config.hash_file):
+        return None
+    # Shared lock: concurrent readers OK, blocks only while a writer
+    # (PaddockTS.query.locked_registry, which holds LOCK_EX) is mid-truncate.
+    with open(config.hash_file) as f:
+        fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+        data = f.read()
+    if not data:
+        return None
+    registry = json.loads(data)
+    for bbox_hash, entry in registry.items():
+        for q in entry.get("queries", []):
+            if q["stub"] == stub:
+                return bbox_hash, q["time_hash"]
+    return None
+
+
 @app.get("/status/{stub}")
 def get_status(stub: str):
     out = f"{config.out_dir}/{stub}"
-    tmp = f"{config.tmp_dir}/{stub}"
-    env = f"{tmp}/Environmental"
-    s = stub
+    env = f"{config.tmp_dir}/{stub}/Environmental"
+
+    hashes = _lookup_query_hashes(stub)
+    if hashes:
+        bbox_hash, time_hash = hashes
+        q_dir = f"{config.tmp_dir}/aoi/{bbox_hash}/{time_hash}"
+        sentinel2_ready = exists(f"{q_dir}/sentinel2.zarr")
+        vegfrac_ready = exists(f"{q_dir}/fractional_cover.zarr")
+        paddocks_ready = exists(f"{q_dir}/sam_paddocks.gpkg")
+    else:
+        sentinel2_ready = vegfrac_ready = paddocks_ready = False
+
+    # Paddocks-overlay videos are named after the stem of the paddocks file;
+    # the default pipeline writes sam_paddocks.gpkg.
+    paddocks_stem = "sam_paddocks"
+
     return {
-        "sentinel2_download": exists(f"{tmp}/{s}_sentinel2.zarr"),
-        "vegfrac_compute": exists(f"{tmp}/{s}_vegfrac.zarr"),
-        "paddock_segment": exists(f"{tmp}/{s}_paddocks.gpkg"),
-        "sentinel2_video": exists(f"{out}/{s}_sentinel2.mp4"),
-        "sentinel2_paddocks_video": exists(f"{out}/{s}_sentinel2_paddocks.mp4"),
-        "vegfrac_video": exists(f"{out}/{s}_vegfrac.mp4"),
-        "vegfrac_paddocks_video": exists(f"{out}/{s}_vegfrac_paddocks.mp4"),
-        "silo_ready": exists(f"{env}/{s}_silo.csv"),
-        "ozwald_daily_ready": exists(f"{env}/{s}_ozwald_daily.csv"),
+        "sentinel2_download": sentinel2_ready,
+        "vegfrac_compute": vegfrac_ready,
+        "paddock_segment": paddocks_ready,
+        "sentinel2_video": exists(f"{out}/{stub}_sentinel2.mp4"),
+        "sentinel2_paddocks_video": exists(f"{out}/{paddocks_stem}_sentinel2_paddocks.mp4"),
+        "vegfrac_video": exists(f"{out}/{stub}_fractional_cover.mp4"),
+        "vegfrac_paddocks_video": exists(f"{out}/{paddocks_stem}_fractional_cover_paddocks.mp4"),
+        "silo_ready": exists(f"{env}/{stub}_silo.csv"),
+        "ozwald_daily_ready": exists(f"{env}/{stub}_ozwald_daily.csv"),
     }
 
 
