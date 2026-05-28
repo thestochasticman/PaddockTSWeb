@@ -65,7 +65,7 @@ export default function EnvChart({ data, group }: Props) {
       data={traces}
       layout={layout}
       config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", minHeight: 180 }}
       useResizeHandler
     />
   );

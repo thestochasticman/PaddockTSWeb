@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { BASE } from "../api";
 import { useWorkspace } from "./WorkspaceContext";
 import { SILO_GROUPS, OZWALD_DAILY_GROUPS, PlotGroupConfig } from "../charts/plotGroups";
@@ -212,8 +213,51 @@ export function findPane(id: string): PaneSpec | undefined {
 
 // ---------- PaneCard: header + body wrapper for a grid item ----------
 
-export function PaneCard({ id, onClose }: { id: string; onClose: () => void }) {
+export function PaneCard({
+  id,
+  onClose,
+  onOverflow,
+}: {
+  id: string;
+  onClose: () => void;
+  onOverflow?: (id: string, deficitPx: number) => void;
+}) {
   const spec = findPane(id);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // `fired` lives in a ref so it survives effect re-runs (e.g. if a parent
+  // re-renders and breaks our deps memoisation, we still don't refire).
+  const firedRef = useRef(false);
+
+  // Observe the body's scroll vs. client height once after mount. If content
+  // overflows, fire onOverflow exactly once and disconnect — that's enough
+  // to set the measured floor (minH) for this pane. Further firings would
+  // be feedback noise (Plotly redraws + scrollbar visibility cycles).
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el || !onOverflow) return;
+    if (firedRef.current) return;
+    let debounceT: ReturnType<typeof setTimeout> | null = null;
+    const ro = new ResizeObserver(() => {
+      if (firedRef.current) return;
+      if (debounceT) clearTimeout(debounceT);
+      debounceT = setTimeout(() => {
+        if (firedRef.current) return;
+        const deficit = el.scrollHeight - el.clientHeight;
+        if (deficit > 4) {
+          firedRef.current = true;
+          onOverflow(id, deficit);
+          ro.disconnect();
+        }
+      }, 250);
+    });
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => {
+      if (debounceT) clearTimeout(debounceT);
+      ro.disconnect();
+    };
+  }, [id, onOverflow]);
+
   if (!spec) return null;
   return (
     <div
@@ -266,7 +310,18 @@ export function PaneCard({ id, onClose }: { id: string; onClose: () => void }) {
           ×
         </button>
       </div>
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "0.5rem 0.75rem", boxSizing: "border-box" }}>
+      <div
+        ref={bodyRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          scrollbarGutter: "stable",
+          padding: "0.5rem 0.75rem",
+          boxSizing: "border-box",
+        }}
+      >
         {spec.render()}
       </div>
     </div>

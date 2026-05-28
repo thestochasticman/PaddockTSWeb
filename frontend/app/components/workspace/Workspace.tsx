@@ -4,7 +4,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import GridLayout, { Layout } from "react-grid-layout";
 import { useJobStatus } from "../query/useJobStatus";
 import { useEnvironmentalData } from "../charts/useEnvironmentalData";
@@ -163,6 +163,29 @@ export default function Workspace({ stub }: Props) {
     } catch {}
   };
 
+  // Pane reported its content is taller than its body (would scroll).
+  // Grow that item's h and minH just enough to clear the overflow. Stable
+  // identity (useCallback) keeps PaneCard's ResizeObserver effect from
+  // re-arming on every Workspace render.
+  const handleOverflow = useCallback((id: string, deficitPx: number) => {
+    const deficitRows = Math.ceil(deficitPx / (ROW_HEIGHT + 8));
+    if (deficitRows <= 0) return;
+    setLayout((cur) => {
+      const idx = cur.findIndex((l) => l.i === id);
+      if (idx === -1) return cur;
+      const item = cur[idx];
+      const newH = item.h + deficitRows;
+      const newMinH = Math.max(item.minH ?? 1, newH);
+      if (newH === item.h && newMinH === (item.minH ?? 1)) return cur;
+      const next = [...cur];
+      next[idx] = { ...item, h: newH, minH: newMinH };
+      try {
+        window.localStorage.setItem(layoutKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, [layoutKey]);
+
   const openPane = (id: string) => {
     if (layout.find((l) => l.i === id)) return; // already open
     const spec = findPane(id);
@@ -251,7 +274,11 @@ export default function Workspace({ stub }: Props) {
             >
               {layout.map((item) => (
                 <div key={item.i}>
-                  <PaneCard id={item.i} onClose={() => closePane(item.i)} />
+                  <PaneCard
+                    id={item.i}
+                    onClose={() => closePane(item.i)}
+                    onOverflow={handleOverflow}
+                  />
                 </div>
               ))}
             </GridLayout>
