@@ -16,7 +16,7 @@ export const SILO_GROUPS: Record<string, PlotGroupConfig> = {
   rainfall: {
     vars: ["daily_rain"],
     ylabel: "Rainfall (mm)",
-    title: "Monthly Rainfall",
+    title: "Daily Rainfall",
     kind: "bar",
     colors: ["#48f"],
   },
@@ -50,7 +50,7 @@ export const OZWALD_DAILY_GROUPS: Record<string, PlotGroupConfig> = {
   precipitation: {
     vars: ["Pg"],
     ylabel: "Precipitation (mm)",
-    title: "OzWALD Monthly Precipitation",
+    title: "OzWALD Daily Precipitation",
     kind: "bar",
     colors: ["#48f"],
   },

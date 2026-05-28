@@ -7,15 +7,21 @@ import { BASE } from "../../components/api";
 import { useEnvironmentalData } from "../../components/charts/useEnvironmentalData";
 import { SILO_GROUPS, OZWALD_DAILY_GROUPS } from "../../components/charts/plotGroups";
 import EnvSection from "../../components/charts/EnvSection";
+import CalendarPanel from "../../components/calendar/CalendarPanel";
+import PhenologyPanel from "../../components/phenology/PhenologyPanel";
 
 type OutputStatus = {
   sentinel2_download: boolean;
+  sentinel2_clean: boolean;
   vegfrac_compute: boolean;
   paddock_segment: boolean;
+  paddockTS_ready: boolean;
   sentinel2_video: boolean;
   sentinel2_paddocks_video: boolean;
   vegfrac_video: boolean;
   vegfrac_paddocks_video: boolean;
+  calendar_ready: boolean;
+  phenology_plot_ready: boolean;
   silo_ready: boolean;
   ozwald_daily_ready: boolean;
 };
@@ -35,12 +41,16 @@ const VIDEOS: VideoEntry[] = [
 
 const EMPTY: OutputStatus = {
   sentinel2_download: false,
+  sentinel2_clean: false,
   vegfrac_compute: false,
   paddock_segment: false,
+  paddockTS_ready: false,
   sentinel2_video: false,
   sentinel2_paddocks_video: false,
   vegfrac_video: false,
   vegfrac_paddocks_video: false,
+  calendar_ready: false,
+  phenology_plot_ready: false,
   silo_ready: false,
   ozwald_daily_ready: false,
 };
@@ -215,6 +225,16 @@ export default function ResultsPage() {
           </div>
         ))}
       </div>
+
+      <CalendarPanel
+        stub={stub}
+        ready={outputs.paddock_segment && outputs.sentinel2_clean}
+      />
+
+      <PhenologyPanel
+        stub={stub}
+        ready={outputs.paddockTS_ready}
+      />
 
       <EnvSection
         title="SILO Climate Data"
