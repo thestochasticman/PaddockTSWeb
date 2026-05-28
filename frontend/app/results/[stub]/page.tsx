@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BASE } from "../../components/api";
 import { useEnvironmentalData } from "../../components/charts/useEnvironmentalData";
@@ -9,6 +9,7 @@ import { SILO_GROUPS, OZWALD_DAILY_GROUPS } from "../../components/charts/plotGr
 import EnvSection from "../../components/charts/EnvSection";
 import CalendarPanel from "../../components/calendar/CalendarPanel";
 import PhenologyPanel from "../../components/phenology/PhenologyPanel";
+import Workspace from "../../components/workspace/Workspace";
 
 type OutputStatus = {
   sentinel2_download: boolean;
@@ -59,6 +60,9 @@ const POLL_MS = 4000;
 
 export default function ResultsPage() {
   const { stub } = useParams<{ stub: string }>();
+  const searchParams = useSearchParams();
+  const useWorkspace = searchParams.get("ui") === "workspace";
+
   const [outputs, setOutputs] = useState<OutputStatus>(EMPTY);
   const [videoScale, setVideoScale] = useState(100);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -76,7 +80,7 @@ export default function ResultsPage() {
   const ozwald = useEnvironmentalData(stub, "ozwald_daily", outputs.ozwald_daily_ready);
 
   useEffect(() => {
-    if (!stub) return;
+    if (!stub || useWorkspace) return;
 
     const poll = async () => {
       try {
@@ -109,7 +113,11 @@ export default function ResultsPage() {
         intervalRef.current = null;
       }
     };
-  }, [stub]);
+  }, [stub, useWorkspace]);
+
+  if (useWorkspace) {
+    return <Workspace stub={stub} />;
+  }
 
   const totalReady = Object.values(outputs).filter(Boolean).length;
   const totalItems = Object.keys(outputs).length;

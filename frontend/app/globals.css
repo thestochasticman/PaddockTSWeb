@@ -30,6 +30,34 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: #333; }
 
+/* react-grid-layout: enable all 8 resize handles so the panes behave like
+   OS windows. react-resizable ships a single 20×20 corner icon and centers
+   the edge handles at the midpoint; override that so every pixel along
+   the perimeter is a resize hit zone. Selectors are scoped under
+   .react-grid-item so they out-specify the library's bundled styles. */
+.react-grid-item > .react-resizable-handle {
+  position: absolute !important;
+  background: transparent !important;
+  background-image: none !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 10;
+}
+.react-grid-item > .react-resizable-handle::after { display: none !important; }
+
+/* Corners — 20×20 px square at each corner. */
+.react-grid-item > .react-resizable-handle-se { bottom: 0 !important; right: 0 !important; top: auto !important; left: auto !important; width: 20px !important; height: 20px !important; cursor: se-resize !important; }
+.react-grid-item > .react-resizable-handle-sw { bottom: 0 !important; left: 0 !important;  top: auto !important; right: auto !important; width: 20px !important; height: 20px !important; cursor: sw-resize !important; }
+.react-grid-item > .react-resizable-handle-ne { top: 0 !important;    right: 0 !important; bottom: auto !important; left: auto !important; width: 20px !important; height: 20px !important; cursor: ne-resize !important; }
+.react-grid-item > .react-resizable-handle-nw { top: 0 !important;    left: 0 !important;  bottom: auto !important; right: auto !important; width: 20px !important; height: 20px !important; cursor: nw-resize !important; }
+
+/* Edges — full-length 10 px deep strips between the corner zones. */
+.react-grid-item > .react-resizable-handle-n { top: 0 !important;    left: 20px !important; right: 20px !important; bottom: auto !important; width: auto !important; height: 10px !important; cursor: ns-resize !important; }
+.react-grid-item > .react-resizable-handle-s { bottom: 0 !important; left: 20px !important; right: 20px !important; top: auto !important;    width: auto !important; height: 10px !important; cursor: ns-resize !important; }
+.react-grid-item > .react-resizable-handle-w { left: 0 !important;   top: 20px !important;  bottom: 20px !important; right: auto !important; width: 10px !important; height: auto !important; cursor: ew-resize !important; }
+.react-grid-item > .react-resizable-handle-e { right: 0 !important;  top: 20px !important;  bottom: 20px !important; left: auto !important;  width: 10px !important; height: auto !important; cursor: ew-resize !important; }
+
 @layer components {
 
   .crt-root {

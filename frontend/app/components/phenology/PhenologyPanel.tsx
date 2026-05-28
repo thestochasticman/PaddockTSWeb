@@ -111,27 +111,23 @@ export default function PhenologyPanel({ stub, ready }: Props) {
 
   if (!ready) {
     return (
-      <section style={{ marginTop: "2rem" }}>
-        <h2 style={SECTION_HEADER_STYLE}>Phenology</h2>
-        <div
-          style={{
-            fontSize: "0.85rem",
-            fontFamily: "monospace",
-            color: "var(--text-secondary)",
-            padding: "1rem",
-            border: "1px solid var(--border)",
-            background: "var(--bg-panel)",
-          }}
-        >
-          Waiting for paddock time series...
-        </div>
-      </section>
+      <div
+        style={{
+          fontSize: "0.85rem",
+          fontFamily: "monospace",
+          color: "var(--text-secondary)",
+          padding: "1rem",
+          border: "1px solid var(--border)",
+          background: "var(--bg-panel)",
+        }}
+      >
+        Waiting for paddock time series...
+      </div>
     );
   }
 
   if (paddocks.length === 0) return null;
 
-  const selectedPaddock = paddocks.find((p) => p.id === paddockId);
   const metrics = data?.metrics;
 
   const traces: any[] = [];
@@ -199,18 +195,31 @@ export default function PhenologyPanel({ stub, ready }: Props) {
     autosize: true,
   };
 
-  return (
-    <section style={{ marginTop: "2rem" }}>
-      <h2 style={SECTION_HEADER_STYLE}>Phenology</h2>
+  const legendItem = (color: string, label: string) => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+      <span
+        style={{
+          display: "inline-block",
+          width: 10,
+          height: 2,
+          background: color,
+        }}
+      />
+      <span style={{ color: "var(--text-secondary)" }}>{label}</span>
+    </span>
+  );
 
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", height: "100%" }}>
       <div
         style={{
           display: "flex",
           gap: "1.25rem",
-          marginBottom: "0.75rem",
-          fontSize: "0.85rem",
+          fontSize: "0.8rem",
           color: "var(--text-primary)",
           fontFamily: "monospace",
+          flexWrap: "wrap",
+          alignItems: "center",
         }}
       >
         <label style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -242,108 +251,72 @@ export default function PhenologyPanel({ stub, ready }: Props) {
             ))}
           </select>
         </label>
-      </div>
-
-      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {loading && (
-            <div
-              style={{
-                padding: "1rem",
-                fontSize: "0.8rem",
-                fontFamily: "monospace",
-                color: "var(--text-secondary)",
-              }}
-            >
-              computing phenology...
-            </div>
-          )}
-          {!loading && error && (
-            <div
-              style={{
-                padding: "1rem",
-                fontSize: "0.8rem",
-                fontFamily: "monospace",
-                color: "var(--text-secondary)",
-                border: "1px solid var(--border)",
-                background: "var(--bg-panel)",
-              }}
-            >
-              {error}
-            </div>
-          )}
-          {!loading && !error && data && traces.length > 0 && (
-            <Plot
-              data={traces}
-              layout={layout}
-              config={{ responsive: true, displayModeBar: false }}
-              style={{ width: "100%", height: "360px" }}
-              useResizeHandler
-            />
-          )}
-          {!loading && !error && data && traces.length === 0 && (
-            <div
-              style={{
-                padding: "1rem",
-                fontSize: "0.8rem",
-                fontFamily: "monospace",
-                color: "var(--text-secondary)",
-              }}
-            >
-              no observations for this paddock × year
-            </div>
-          )}
-        </div>
-
-        <div
+        <span
           style={{
-            width: "260px",
-            border: "1px solid var(--border)",
-            background: "var(--bg-panel)",
-            padding: "0.75rem",
-            fontSize: "0.85rem",
+            marginLeft: "auto",
+            display: "inline-flex",
+            gap: "0.85rem",
+            fontSize: "0.75rem",
             fontFamily: "monospace",
-            color: "var(--text-primary)",
-            lineHeight: 1.6,
           }}
         >
-          <div>
-            paddock: {selectedPaddock?.label ?? "—"}
-            {selectedPaddock?.area_ha != null
-              ? ` · ${selectedPaddock.area_ha.toFixed(1)} ha`
-              : ""}
-          </div>
-          <div>year: {year ?? "—"}</div>
-          <hr
-            style={{
-              border: "none",
-              borderTop: "1px solid var(--border)",
-              margin: "0.5rem 0",
-            }}
-          />
-          {metrics ? (
-            <>
-              <div style={{ color: SOS_COLOR }}>
-                SoS: doy {fmt(metrics.sos_time, 0)} · {fmt(metrics.sos_value, 2)}
-              </div>
-              <div style={{ color: POS_COLOR }}>
-                PoS: doy {fmt(metrics.pos_time, 0)} · {fmt(metrics.pos_value, 2)}
-              </div>
-              <div style={{ color: EOS_COLOR }}>
-                EoS: doy {fmt(metrics.eos_time, 0)} · {fmt(metrics.eos_value, 2)}
-              </div>
-              <div>peaks: {metrics.num_peaks ?? "—"}</div>
-            </>
-          ) : (
-            <div style={{ color: "var(--text-secondary)" }}>metrics unavailable</div>
-          )}
-        </div>
+          {legendItem(SOS_COLOR, "Start of Season")}
+          {legendItem(POS_COLOR, "Peak of Season")}
+          {legendItem(EOS_COLOR, "End of Season")}
+        </span>
       </div>
-    </section>
-  );
-}
 
-function fmt(v: number | null | undefined, digits: number): string {
-  if (v == null) return "—";
-  return v.toFixed(digits);
+      {loading && (
+        <div
+          style={{
+            padding: "1rem",
+            fontSize: "0.8rem",
+            fontFamily: "monospace",
+            color: "var(--text-secondary)",
+          }}
+        >
+          computing phenology...
+        </div>
+      )}
+      {!loading && error && (
+        <div
+          style={{
+            padding: "1rem",
+            fontSize: "0.8rem",
+            fontFamily: "monospace",
+            color: "var(--text-secondary)",
+            border: "1px solid var(--border)",
+            background: "var(--bg-panel)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+      {!loading && !error && data && traces.length > 0 && (
+        <Plot
+          data={traces}
+          layout={layout}
+          config={{ responsive: true, displayModeBar: false }}
+          style={{ width: "100%", height: "280px" }}
+        />
+      )}
+      {!loading && !error && data && traces.length === 0 && (
+        <div
+          style={{
+            padding: "1rem",
+            fontSize: "0.8rem",
+            fontFamily: "monospace",
+            color: "var(--text-secondary)",
+          }}
+        >
+          no observations for this paddock × year
+        </div>
+      )}
+      {!metrics && !loading && !error && data && (
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
+          phenology metrics unavailable (paddock had too few observations)
+        </div>
+      )}
+    </div>
+  );
 }
