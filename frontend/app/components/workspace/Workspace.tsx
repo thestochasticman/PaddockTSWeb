@@ -21,9 +21,9 @@ const ROW_HEIGHT = 30;
 
 const DEFAULT_LAYOUT: Layout[] = [
   { i: "video.sentinel2", x: 0, y: 0, w: 6, h: 18 },
-  { i: "calendar", x: 6, y: 0, w: 6, h: 16 },
-  { i: "silo.rainfall", x: 0, y: 18, w: 6, h: 14 },
-  { i: "phenology", x: 6, y: 16, w: 6, h: 18 },
+  { i: "video.sentinel2_paddocks", x: 6, y: 0, w: 6, h: 18 },
+  { i: "paddock", x: 0, y: 18, w: 12, h: 28 },
+  { i: "silo.rainfall", x: 0, y: 46, w: 12, h: 14 },
 ];
 
 // ---------------- activity bar ----------------

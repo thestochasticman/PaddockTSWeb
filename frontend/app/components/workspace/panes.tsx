@@ -4,8 +4,7 @@ import { BASE } from "../api";
 import { useWorkspace } from "./WorkspaceContext";
 import { SILO_GROUPS, OZWALD_DAILY_GROUPS, PlotGroupConfig } from "../charts/plotGroups";
 import EnvChart from "../charts/EnvChart";
-import CalendarPanel from "../calendar/CalendarPanel";
-import PhenologyPanel from "../phenology/PhenologyPanel";
+import PaddockPanel from "../paddock/PaddockPanel";
 
 // MIME marker for sidebar → grid drags (phase 2 will use it).
 export const SIDEBAR_DRAG_MIME = "application/x-paddockts-pane-spec";
@@ -110,17 +109,19 @@ function EnvChartContent({ source, groupKey }: { source: EnvSource; groupKey: st
   return <EnvChart data={fetchState.data} group={group} />;
 }
 
-// ---------- calendar / phenology / info ----------
+// ---------- paddock (combined calendar + phenology) + info ----------
 
-function CalendarContent() {
+function PaddockContent() {
   const { stub, outputs } = useWorkspace();
-  const ready = outputs.paddock_segment && outputs.sentinel2_clean;
-  return <CalendarPanel stub={stub} ready={ready} />;
-}
-
-function PhenologyContent() {
-  const { stub, outputs } = useWorkspace();
-  return <PhenologyPanel stub={stub} ready={outputs.paddockTS_ready} />;
+  const calendarReady = outputs.paddock_segment && outputs.sentinel2_clean;
+  const phenologyReady = outputs.paddockTS_ready;
+  return (
+    <PaddockPanel
+      stub={stub}
+      calendarReady={calendarReady}
+      phenologyReady={phenologyReady}
+    />
+  );
 }
 
 function InfoContent() {
@@ -171,8 +172,7 @@ export type PaneSpec = {
 const W_HALF = 6;
 const W_FULL = 12;
 const H_VIDEO = 18;
-const H_CALENDAR = 16;
-const H_PHENOLOGY = 14;
+const H_PADDOCK = 28; // combined calendar (top) + phenology (bottom)
 const H_ENV = 14;
 const H_INFO = 10;
 
@@ -182,8 +182,7 @@ export const PANES: PaneSpec[] = [
   { id: "video.fractional_cover", title: "Fractional Cover", category: "Videos", defaultW: W_HALF, defaultH: H_VIDEO, render: () => <VideoContent videoKey="fractional_cover" /> },
   { id: "video.fractional_cover_paddocks", title: "FC + Paddocks", category: "Videos", defaultW: W_HALF, defaultH: H_VIDEO, render: () => <VideoContent videoKey="fractional_cover_paddocks" /> },
 
-  { id: "calendar", title: "Calendar", category: "Interactive", defaultW: W_FULL, defaultH: H_CALENDAR, render: () => <CalendarContent /> },
-  { id: "phenology", title: "Phenology", category: "Interactive", defaultW: W_FULL, defaultH: H_PHENOLOGY, render: () => <PhenologyContent /> },
+  { id: "paddock", title: "Paddock · Calendar & Phenology", category: "Interactive", defaultW: W_FULL, defaultH: H_PADDOCK, render: () => <PaddockContent /> },
 
   ...Object.entries(SILO_GROUPS).map(([key, g]) => ({
     id: `silo.${key}`,
