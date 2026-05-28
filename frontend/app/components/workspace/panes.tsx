@@ -171,10 +171,11 @@ export type PaneSpec = {
 
 const W_HALF = 6;
 const W_FULL = 12;
-const H_VIDEO = 18;
-const H_PADDOCK = 28; // combined calendar (top) + phenology (bottom)
-const H_ENV = 14;
-const H_INFO = 10;
+// Compact defaults — each row = 30 px. User can resize from the edges.
+const H_VIDEO = 12; // 360 px
+const H_PADDOCK = 18; // 540 px — controls + calendar row + ~280 px plot
+const H_ENV = 10; // 300 px — Plotly chart 280 + chrome
+const H_INFO = 6; // 180 px
 
 export const PANES: PaneSpec[] = [
   { id: "video.sentinel2", title: "Sentinel-2", category: "Videos", defaultW: W_HALF, defaultH: H_VIDEO, render: () => <VideoContent videoKey="sentinel2" /> },

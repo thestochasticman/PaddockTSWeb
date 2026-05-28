@@ -353,7 +353,8 @@ export default function PaddockPanel({ stub, calendarReady, phenologyReady }: Pr
                 data={phenoTraces}
                 layout={phenoLayout}
                 config={{ responsive: true, displayModeBar: false }}
-                style={{ width: "100%", height: "280px" }}
+                style={{ width: "100%", height: "100%" }}
+                useResizeHandler
               />
             )}
             {phenologyReady && !phenologyLoading && !phenologyError && phenology && phenoTraces.length === 0 && (
