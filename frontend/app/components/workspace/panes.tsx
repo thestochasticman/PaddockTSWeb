@@ -96,8 +96,11 @@ function VideoContent({ videoKey }: { videoKey: VideoKey }) {
 type EnvSource = "silo" | "ozwald_daily" | "ozwald_8day";
 
 function EnvChartContent({ source, groupKey }: { source: EnvSource; groupKey: string }) {
-  const { silo, ozwald, ozwald8day, outputs } = useWorkspace();
+  const { silo, ozwald, ozwald8day, outputs, paneResetKey } = useWorkspace();
   const [filter, setFilter] = useState<YearFilterValue>({ kind: "full" });
+  useEffect(() => {
+    setFilter({ kind: "full" });
+  }, [paneResetKey]);
 
   const groups: Record<string, PlotGroupConfig> =
     source === "silo"
@@ -135,11 +138,14 @@ function EnvChartContent({ source, groupKey }: { source: EnvSource; groupKey: st
 // ---------- paddock (combined calendar + phenology) + info ----------
 
 function PaddockContent() {
-  const { stub, outputs } = useWorkspace();
+  const { stub, outputs, paneResetKey } = useWorkspace();
   const calendarReady = outputs.paddock_segment && outputs.sentinel2_clean;
   const phenologyReady = outputs.paddockTS_ready;
+  // key={paneResetKey} remounts the panel on reset, clearing paddock + year
+  // selections and any hover/preview state.
   return (
     <PaddockPanel
+      key={paneResetKey}
       stub={stub}
       calendarReady={calendarReady}
       phenologyReady={phenologyReady}
@@ -148,8 +154,14 @@ function PaddockContent() {
 }
 
 function PhenologyContent() {
-  const { stub, outputs } = useWorkspace();
-  return <PhenologyPanel stub={stub} ready={outputs.paddockTS_ready} />;
+  const { stub, outputs, paneResetKey } = useWorkspace();
+  return (
+    <PhenologyPanel
+      key={paneResetKey}
+      stub={stub}
+      ready={outputs.paddockTS_ready}
+    />
+  );
 }
 
 // Combined rainfall + soil-moisture chart. Two traces sharing the same time
@@ -157,8 +169,11 @@ function PhenologyContent() {
 // moisture on the right). Plotly's built-in legend lets the user click a
 // trace name to toggle that trace's visibility.
 function RainSoilContent() {
-  const { silo, ozwald8day, outputs } = useWorkspace();
+  const { silo, ozwald8day, outputs, paneResetKey } = useWorkspace();
   const [filter, setFilter] = useState<YearFilterValue>({ kind: "full" });
+  useEffect(() => {
+    setFilter({ kind: "full" });
+  }, [paneResetKey]);
 
   if (!outputs.silo_ready && !outputs.ozwald_8day_ready) {
     return <Pending label="SILO + OzWALD downloads pending..." />;

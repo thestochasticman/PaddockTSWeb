@@ -137,6 +137,7 @@ export default function Workspace({ stub }: Props) {
   const [layout, setLayout] = useState<Layout[]>(DEFAULT_LAYOUT);
   const [containerWidth, setContainerWidth] = useState<number>(1200);
   const [draggingSpecId, setDraggingSpecId] = useState<string | null>(null);
+  const [paneResetKey, setPaneResetKey] = useState<number>(0);
   const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const layoutKey = `workspace-grid:${stub}`;
@@ -259,7 +260,7 @@ export default function Workspace({ stub }: Props) {
   const openIds = layout.map((l) => l.i);
 
   return (
-    <WorkspaceProvider value={{ stub, outputs, silo, ozwald, ozwald8day }}>
+    <WorkspaceProvider value={{ stub, outputs, silo, ozwald, ozwald8day, paneResetKey }}>
       <div
         style={{
           width: "100%",
@@ -292,7 +293,19 @@ export default function Workspace({ stub }: Props) {
         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
           <ActivityBar
             active={activePanel}
-            onSelect={setActivePanel}
+            onSelect={(id) => {
+              setActivePanel(id);
+              // Pressing the menu (Outputs) button resets transient plot
+              // state across all panes (year filters, etc.).
+              if (id === "outputs") setPaneResetKey((k) => k + 1);
+              // Sidebar toggling changes the dock area width but not the
+              // window size — react-plotly's useResizeHandler only listens
+              // for window resize, so the plots stay squished otherwise.
+              // Fire a synthetic resize after layout settles to nudge them.
+              setTimeout(() => {
+                window.dispatchEvent(new Event("resize"));
+              }, 60);
+            }}
             onResetLayout={resetLayout}
           />
           {activePanel === "outputs" && (
