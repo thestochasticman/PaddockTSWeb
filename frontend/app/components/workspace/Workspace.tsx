@@ -11,6 +11,7 @@ import { useEnvironmentalData } from "../charts/useEnvironmentalData";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import { PANES, PaneCard, findPane } from "./panes";
 import Sidebar from "./Sidebar";
+import TopBar from "../ui/TopBar";
 
 type Props = { stub: string };
 
@@ -120,6 +121,22 @@ function ActivityBar({
       >
         ↺
       </button>
+      <Link
+        href="/features"
+        title="Features"
+        style={{
+          width: 48,
+          height: 48,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--text-secondary)",
+          textDecoration: "none",
+          fontSize: "1.1rem",
+        }}
+      >
+        ?
+      </Link>
       <div style={{ flex: 1 }} />
     </div>
   );
@@ -270,25 +287,14 @@ export default function Workspace({ stub }: Props) {
           minHeight: "100vh",
         }}
       >
-        <div
-          style={{
-            height: 48,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 0.75rem",
-            borderBottom: "1px solid var(--border)",
-            fontFamily: "monospace",
-            fontSize: "0.85rem",
-            color: "var(--text-primary)",
-            flexShrink: 0,
-          }}
-        >
-          <div>{stub}</div>
-          <div style={{ color: "var(--text-secondary)" }}>
-            {readyCount}/{totalCount} outputs ready
-          </div>
-        </div>
+        <TopBar
+          center={stub}
+          right={
+            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "monospace" }}>
+              {readyCount}/{totalCount} outputs ready
+            </span>
+          }
+        />
 
         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
           <ActivityBar
