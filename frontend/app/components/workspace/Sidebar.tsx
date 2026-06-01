@@ -6,6 +6,8 @@ import { PANES, PaneSpec } from "./panes";
 type Props = {
   openIds: string[];
   onOpen: (id: string) => void;
+  onDragStart?: (id: string) => void;
+  onDragEnd?: () => void;
 };
 
 const CATEGORY_ORDER: PaneSpec["category"][] = [
@@ -16,7 +18,7 @@ const CATEGORY_ORDER: PaneSpec["category"][] = [
   "Info",
 ];
 
-export default function Sidebar({ openIds, onOpen }: Props) {
+export default function Sidebar({ openIds, onOpen, onDragStart, onDragEnd }: Props) {
   const [collapsed, setCollapsed] = useState<Set<PaneSpec["category"]>>(new Set());
   const openSet = new Set(openIds);
 
@@ -91,14 +93,31 @@ export default function Sidebar({ openIds, onOpen }: Props) {
                   return (
                     <div
                       key={p.id}
-                      onClick={() => onOpen(p.id)}
-                      title={open ? "already open" : "click to add to layout"}
+                      // react-grid-layout's isDroppable listens for HTML5
+                      // drag events; setting these makes this element a
+                      // drag source the grid will accept.
+                      draggable={!open}
+                      unselectable="on"
+                      onDragStart={(e) => {
+                        if (open) {
+                          e.preventDefault();
+                          return;
+                        }
+                        e.dataTransfer.setData("text/plain", p.id);
+                        e.dataTransfer.effectAllowed = "copy";
+                        onDragStart?.(p.id);
+                      }}
+                      onDragEnd={() => onDragEnd?.()}
+                      onClick={() => {
+                        if (!open) onOpen(p.id);
+                      }}
+                      title={open ? "already open" : "click or drag onto the grid"}
                       style={{
                         color: open ? "var(--text-muted)" : "var(--text-primary)",
                         padding: "0.3rem 1.5rem",
                         fontFamily: "inherit",
                         fontSize: "0.8rem",
-                        cursor: open ? "default" : "pointer",
+                        cursor: open ? "default" : "grab",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",

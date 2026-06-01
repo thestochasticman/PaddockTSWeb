@@ -19,11 +19,19 @@ const ROW_HEIGHT = 30;
 
 // ---------------- default layout ----------------
 
+// 4 videos stacked vertically on the left; rainfall, evapotranspiration,
+// soil moisture, and the combined paddock (calendar + phenology) block on
+// the right.
+const ROW_H = 14;
 const DEFAULT_LAYOUT: Layout[] = [
-  { i: "video.sentinel2", x: 0, y: 0, w: 6, h: 12 },
-  { i: "video.sentinel2_paddocks", x: 6, y: 0, w: 6, h: 12 },
-  { i: "paddock", x: 0, y: 12, w: 12, h: 18 },
-  { i: "silo.rainfall", x: 0, y: 30, w: 12, h: 10 },
+  { i: "video.sentinel2",                  x: 0, y: 0 * ROW_H, w: 5, h: ROW_H },
+  { i: "video.sentinel2_paddocks",         x: 0, y: 1 * ROW_H, w: 5, h: ROW_H },
+  { i: "video.fractional_cover",           x: 0, y: 2 * ROW_H, w: 5, h: ROW_H },
+  { i: "video.fractional_cover_paddocks",  x: 0, y: 3 * ROW_H, w: 5, h: ROW_H },
+  { i: "silo.temperature",                 x: 5, y: 0 * ROW_H, w: 7, h: ROW_H },
+  { i: "rain_soil",                        x: 5, y: 1 * ROW_H, w: 7, h: ROW_H },
+  { i: "silo.evapotranspiration",          x: 5, y: 2 * ROW_H, w: 7, h: ROW_H },
+  { i: "paddock",                          x: 5, y: 3 * ROW_H, w: 7, h: ROW_H },
 ];
 
 // ---------------- activity bar ----------------
@@ -77,7 +85,6 @@ function ActivityBar({
       }}
     >
       {btn("outputs", "Outputs", "▦")}
-      <div style={{ flex: 1 }} />
       <Link
         href="/"
         title="Back to home"
@@ -113,6 +120,7 @@ function ActivityBar({
       >
         ↺
       </button>
+      <div style={{ flex: 1 }} />
     </div>
   );
 }
@@ -123,10 +131,12 @@ export default function Workspace({ stub }: Props) {
   const { outputs } = useJobStatus(stub);
   const silo = useEnvironmentalData(stub, "silo", outputs.silo_ready);
   const ozwald = useEnvironmentalData(stub, "ozwald_daily", outputs.ozwald_daily_ready);
+  const ozwald8day = useEnvironmentalData(stub, "ozwald_8day", outputs.ozwald_8day_ready);
 
   const [activePanel, setActivePanel] = useState<ActivityIconId | null>("outputs");
   const [layout, setLayout] = useState<Layout[]>(DEFAULT_LAYOUT);
   const [containerWidth, setContainerWidth] = useState<number>(1200);
+  const [draggingSpecId, setDraggingSpecId] = useState<string | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const layoutKey = `workspace-grid:${stub}`;
@@ -209,12 +219,47 @@ export default function Workspace({ stub }: Props) {
     setLayout(DEFAULT_LAYOUT);
   };
 
+  // Drop-from-sidebar handler. RGL's onDrop fires with the layout (already
+  // containing the placeholder), the placeholder layoutItem, and the native
+  // event. We replace the placeholder id with the actual pane spec id and
+  // size to the spec's defaults.
+  const DROP_PLACEHOLDER_ID = "__dropping__";
+  const handleDrop = (_newLayout: Layout[], item: Layout) => {
+    const specId = draggingSpecId;
+    setDraggingSpecId(null);
+    if (!specId) return;
+    if (layout.find((l) => l.i === specId)) return; // already open
+    const spec = findPane(specId);
+    if (!spec) return;
+    const next = layout
+      .filter((l) => l.i !== DROP_PLACEHOLDER_ID)
+      .concat({
+        i: specId,
+        x: item.x,
+        y: item.y,
+        w: spec.defaultW,
+        h: spec.defaultH,
+      });
+    handleLayoutChange(next);
+  };
+
+  const droppingItem = draggingSpecId
+    ? (() => {
+        const spec = findPane(draggingSpecId);
+        return {
+          i: DROP_PLACEHOLDER_ID,
+          w: spec?.defaultW ?? 6,
+          h: spec?.defaultH ?? 8,
+        };
+      })()
+    : undefined;
+
   const readyCount = Object.values(outputs).filter(Boolean).length;
   const totalCount = Object.keys(outputs).length;
   const openIds = layout.map((l) => l.i);
 
   return (
-    <WorkspaceProvider value={{ stub, outputs, silo, ozwald }}>
+    <WorkspaceProvider value={{ stub, outputs, silo, ozwald, ozwald8day }}>
       <div
         style={{
           width: "100%",
@@ -238,9 +283,7 @@ export default function Workspace({ stub }: Props) {
             flexShrink: 0,
           }}
         >
-          <div>
-            <span style={{ color: "var(--text-secondary)" }}>stub:</span> {stub}
-          </div>
+          <div>{stub}</div>
           <div style={{ color: "var(--text-secondary)" }}>
             {readyCount}/{totalCount} outputs ready
           </div>
@@ -254,7 +297,12 @@ export default function Workspace({ stub }: Props) {
           />
           {activePanel === "outputs" && (
             <div style={{ width: 240, flexShrink: 0 }}>
-              <Sidebar openIds={openIds} onOpen={openPane} />
+              <Sidebar
+                openIds={openIds}
+                onOpen={openPane}
+                onDragStart={setDraggingSpecId}
+                onDragEnd={() => setDraggingSpecId(null)}
+              />
             </div>
           )}
           <div ref={gridContainerRef} style={{ flex: 1, minWidth: 0, padding: "0.5rem" }}>
@@ -267,6 +315,9 @@ export default function Workspace({ stub }: Props) {
               compactType="vertical"
               isResizable
               isDraggable
+              isDroppable={!!draggingSpecId}
+              droppingItem={droppingItem}
+              onDrop={handleDrop}
               resizeHandles={["s", "w", "e", "n", "sw", "se", "nw", "ne"]}
               margin={[8, 8]}
               containerPadding={[0, 0]}

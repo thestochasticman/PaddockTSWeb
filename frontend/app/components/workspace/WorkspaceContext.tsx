@@ -15,6 +15,7 @@ export type WorkspaceContextValue = {
   outputs: OutputStatus;
   silo: EnvFetchState;
   ozwald: EnvFetchState;
+  ozwald8day: EnvFetchState;
 };
 
 const Ctx = createContext<WorkspaceContextValue | null>(null);

@@ -17,6 +17,7 @@ export type OutputStatus = {
   phenology_plot_ready: boolean;
   silo_ready: boolean;
   ozwald_daily_ready: boolean;
+  ozwald_8day_ready: boolean;
 };
 
 const EMPTY: OutputStatus = {
@@ -33,6 +34,7 @@ const EMPTY: OutputStatus = {
   phenology_plot_ready: false,
   silo_ready: false,
   ozwald_daily_ready: false,
+  ozwald_8day_ready: false,
 };
 
 const POLL_MS = 4000;

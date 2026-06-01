@@ -67,3 +67,32 @@ export const OZWALD_DAILY_GROUPS: Record<string, PlotGroupConfig> = {
     colors: ["#f90"],
   },
 };
+
+// OzWALD 8-day variables (Ssoil = root-zone soil moisture, LAI, GPP, NDVI, etc.).
+// One observation every 8 days; we render as a line.
+export const OZWALD_8DAY_GROUPS: Record<string, PlotGroupConfig> = {
+  soil_moisture: {
+    vars: ["Ssoil"],
+    ylabel: "Soil moisture (mm)",
+    title: "OzWALD Soil Moisture",
+    colors: ["#6a9"],
+  },
+  vegetation_index: {
+    vars: ["NDVI", "EVI"],
+    ylabel: "Index",
+    title: "OzWALD NDVI / EVI",
+    colors: ["#6a2", "#9c3"],
+  },
+  lai: {
+    vars: ["LAI"],
+    ylabel: "LAI",
+    title: "OzWALD Leaf Area Index",
+    colors: ["#3a8"],
+  },
+  gpp: {
+    vars: ["GPP"],
+    ylabel: "GPP (gC/m\u00B2/day)",
+    title: "OzWALD Gross Primary Production",
+    colors: ["#6c2"],
+  },
+};

@@ -1,4 +1,5 @@
 from PaddockTS.Environmental.OzWALD.download_ozwald_daily import download_ozwald_daily
+from PaddockTS.Environmental.OzWALD.download_ozwald_8day import download_ozwald_8day
 from PaddockTS.Environmental.SILO.download_silo import download_silo
 from PaddockTS.sentinel2_to_paddockTS_pipeline import run as run_pipeline
 from fastapi.staticfiles import StaticFiles
@@ -77,6 +78,10 @@ def run_environmental(query: Query):
         traceback.print_exc()
     try:
         download_ozwald_daily(query)
+    except Exception:
+        traceback.print_exc()
+    try:
+        download_ozwald_8day(query)
     except Exception:
         traceback.print_exc()
 
@@ -161,6 +166,7 @@ def get_status(stub: str):
         "phenology_plot_ready": bool(glob.glob(f"{out}/{paddocks_stem}_phenology_p*.png")),
         "silo_ready": exists(f"{env}/{stub}_silo.csv"),
         "ozwald_daily_ready": exists(f"{env}/{stub}_ozwald_daily.csv"),
+        "ozwald_8day_ready": exists(f"{env}/{stub}_ozwald_8day.csv"),
     }
 
 
@@ -274,4 +280,10 @@ def get_silo_data(stub: str):
 @app.get("/data/{stub}/ozwald_daily")
 def get_ozwald_daily_data(stub: str):
     path = f"{config.tmp_dir}/{stub}/Environmental/{stub}_ozwald_daily.csv"
+    return _read_csv_as_json(path, "time")
+
+
+@app.get("/data/{stub}/ozwald_8day")
+def get_ozwald_8day_data(stub: str):
+    path = f"{config.tmp_dir}/{stub}/Environmental/{stub}_ozwald_8day.csv"
     return _read_csv_as_json(path, "time")

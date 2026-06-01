@@ -11,9 +11,12 @@ const DEFAULT_COLORS = ["#6a2", "#c44", "#47a", "#c90", "#a5d", "#2aa"];
 type Props = {
   data: EnvDataset;
   group: PlotGroupConfig;
+  /** ISO date strings [start, end]. When set, restricts the x-axis to this
+   *  window (Plotly still has the full data, just zoomed). */
+  xRange?: [string, string] | null;
 };
 
-export default function EnvChart({ data, group }: Props) {
+export default function EnvChart({ data, group, xRange }: Props) {
   if (!data.dates.length) return null;
 
   const isBar = group.kind === "bar";
@@ -50,6 +53,7 @@ export default function EnvChart({ data, group }: Props) {
     xaxis: {
       gridcolor: "#222",
       linecolor: "#222",
+      ...(xRange ? { range: xRange, type: "date" as const } : {}),
     },
     yaxis: {
       title: { text: group.ylabel },

@@ -12,7 +12,7 @@ const EMPTY: EnvDataset = { dates: [], columns: {} };
 
 export function useEnvironmentalData(
   stub: string | null,
-  source: "silo" | "ozwald_daily",
+  source: "silo" | "ozwald_daily" | "ozwald_8day",
   ready: boolean
 ) {
   const [data, setData] = useState<EnvDataset>(EMPTY);
