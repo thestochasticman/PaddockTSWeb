@@ -63,7 +63,9 @@ const POLL_MS = 4000;
 export default function ResultsPage() {
   const { stub } = useParams<{ stub: string }>();
   const searchParams = useSearchParams();
-  const useWorkspace = searchParams.get("ui") === "workspace";
+  // Workspace is the default view; the old long-scroll page is opt-in
+  // via ?ui=legacy.
+  const useWorkspace = searchParams.get("ui") !== "legacy";
 
   const [outputs, setOutputs] = useState<OutputStatus>(EMPTY);
   const [videoScale, setVideoScale] = useState(100);
