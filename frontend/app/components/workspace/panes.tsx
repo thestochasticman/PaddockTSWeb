@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { BASE } from "../api";
 import { useWorkspace } from "./WorkspaceContext";
-import { SILO_GROUPS, OZWALD_DAILY_GROUPS, OZWALD_8DAY_GROUPS, PlotGroupConfig } from "../charts/plotGroups";
+import { SILO_GROUPS, PlotGroupConfig } from "../charts/plotGroups";
 import EnvChart from "../charts/EnvChart";
 import YearFilter, { YearFilterValue, filterToRange } from "../charts/YearFilter";
 import PaddockPanel from "../paddock/PaddockPanel";
 import PhenologyPanel from "../phenology/PhenologyPanel";
-
-const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
 // MIME marker for sidebar → grid drags (phase 2 will use it).
 export const SIDEBAR_DRAG_MIME = "application/x-paddockts-pane-spec";
@@ -93,34 +90,24 @@ function VideoContent({ videoKey }: { videoKey: VideoKey }) {
 
 // ---------- env chart pane ----------
 
-type EnvSource = "silo" | "ozwald_daily" | "ozwald_8day";
+type EnvSource = "silo";
 
 function EnvChartContent({ source, groupKey }: { source: EnvSource; groupKey: string }) {
-  const { silo, ozwald, ozwald8day, outputs, paneResetKey } = useWorkspace();
+  const { silo, outputs, paneResetKey } = useWorkspace();
   const [filter, setFilter] = useState<YearFilterValue>({ kind: "full" });
   useEffect(() => {
     setFilter({ kind: "full" });
   }, [paneResetKey]);
 
-  const groups: Record<string, PlotGroupConfig> =
-    source === "silo"
-      ? SILO_GROUPS
-      : source === "ozwald_daily"
-      ? OZWALD_DAILY_GROUPS
-      : OZWALD_8DAY_GROUPS;
+  const groups: Record<string, PlotGroupConfig> = SILO_GROUPS;
   const group = groups[groupKey];
 
   if (!group) return <Pending label={`unknown chart: ${source}/${groupKey}`} />;
 
-  const ready =
-    source === "silo"
-      ? outputs.silo_ready
-      : source === "ozwald_daily"
-      ? outputs.ozwald_daily_ready
-      : outputs.ozwald_8day_ready;
+  const ready = outputs.silo_ready;
   if (!ready) return <Pending label={`${source.toUpperCase()} download pending...`} />;
 
-  const fetchState = source === "silo" ? silo : source === "ozwald_daily" ? ozwald : ozwald8day;
+  const fetchState = silo;
   if (fetchState.loading) return <Pending label="loading..." />;
   if (fetchState.error) return <Pending label={fetchState.error} />;
   if (!fetchState.data.dates.length) return <Pending label="no data" />;
@@ -164,96 +151,6 @@ function PhenologyContent() {
   );
 }
 
-// Combined rainfall + soil-moisture chart. Two traces sharing the same time
-// axis but on independent y-axes (mm of rainfall on the left, mm of soil
-// moisture on the right). Plotly's built-in legend lets the user click a
-// trace name to toggle that trace's visibility.
-function RainSoilContent() {
-  const { silo, ozwald8day, outputs, paneResetKey } = useWorkspace();
-  const [filter, setFilter] = useState<YearFilterValue>({ kind: "full" });
-  useEffect(() => {
-    setFilter({ kind: "full" });
-  }, [paneResetKey]);
-
-  if (!outputs.silo_ready && !outputs.ozwald_8day_ready) {
-    return <Pending label="SILO + OzWALD downloads pending..." />;
-  }
-  if (silo.loading || ozwald8day.loading) return <Pending label="loading..." />;
-  if (silo.error) return <Pending label={silo.error} />;
-  if (ozwald8day.error) return <Pending label={ozwald8day.error} />;
-
-  const xRange = filterToRange(filter);
-  const filterDates = outputs.silo_ready ? silo.data.dates : ozwald8day.data.dates;
-
-  const traces: any[] = [];
-  if (outputs.silo_ready && silo.data.columns.daily_rain) {
-    traces.push({
-      x: silo.data.dates,
-      y: silo.data.columns.daily_rain,
-      type: "bar",
-      name: "Rainfall (mm)",
-      marker: { color: "#48f" },
-    });
-  }
-  if (outputs.ozwald_8day_ready && ozwald8day.data.columns.Ssoil) {
-    traces.push({
-      x: ozwald8day.data.dates,
-      y: ozwald8day.data.columns.Ssoil,
-      type: "scatter",
-      mode: "lines+markers",
-      name: "Soil moisture (mm)",
-      line: { color: "#6a9", width: 2 },
-      marker: { size: 5 },
-      yaxis: "y2",
-    });
-  }
-
-  const layout: any = {
-    title: { text: "Rainfall & Soil Moisture", font: { size: 13, color: "#ddd" } },
-    paper_bgcolor: "transparent",
-    plot_bgcolor: "#111",
-    font: { color: "#aaa", size: 11 },
-    margin: { l: 55, r: 55, t: 40, b: 50 },
-    xaxis: {
-      type: "date",
-      gridcolor: "#222",
-      linecolor: "#444",
-      ...(xRange ? { range: xRange } : {}),
-    },
-    yaxis: {
-      title: { text: "Rainfall (mm)", font: { color: "#48f" } },
-      gridcolor: "#222",
-      linecolor: "#444",
-      side: "left",
-    },
-    yaxis2: {
-      title: { text: "Soil moisture (mm)", font: { color: "#6a9" } },
-      gridcolor: "transparent",
-      linecolor: "#444",
-      overlaying: "y",
-      side: "right",
-    },
-    showlegend: true,
-    legend: { orientation: "h", y: -0.2, font: { size: 11, color: "#ddd" } },
-    autosize: true,
-  };
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      <YearFilter dates={filterDates} value={filter} onChange={setFilter} />
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <Plot
-          data={traces}
-          layout={layout}
-          config={{ responsive: true, displayModeBar: false }}
-          style={{ width: "100%", height: "100%", minHeight: 180 }}
-          useResizeHandler
-        />
-      </div>
-    </div>
-  );
-}
-
 function InfoContent() {
   const { stub, outputs } = useWorkspace();
   const ready = Object.values(outputs).filter(Boolean).length;
@@ -291,7 +188,7 @@ function InfoContent() {
 export type PaneSpec = {
   id: string;
   title: string;
-  category: "Videos" | "Interactive" | "SILO" | "OzWALD" | "Info";
+  category: "Videos" | "Interactive" | "SILO" | "Info";
   /** Default grid columns (out of 12). */
   defaultW: number;
   /** Default grid rows (each row = 30 px by default rowHeight). */
@@ -315,7 +212,6 @@ export const PANES: PaneSpec[] = [
 
   { id: "paddock", title: "Paddock · Calendar & Phenology", category: "Interactive", defaultW: W_FULL, defaultH: H_PADDOCK, render: () => <PaddockContent /> },
   { id: "phenology", title: "Phenology", category: "Interactive", defaultW: W_HALF, defaultH: H_ENV, render: () => <PhenologyContent /> },
-  { id: "rain_soil", title: "Rainfall + Soil Moisture", category: "Interactive", defaultW: W_HALF, defaultH: H_ENV, render: () => <RainSoilContent /> },
 
   ...Object.entries(SILO_GROUPS).map(([key, g]) => ({
     id: `silo.${key}`,
@@ -324,24 +220,6 @@ export const PANES: PaneSpec[] = [
     defaultW: W_HALF,
     defaultH: H_ENV,
     render: () => <EnvChartContent source="silo" groupKey={key} />,
-  })),
-
-  ...Object.entries(OZWALD_DAILY_GROUPS).map(([key, g]) => ({
-    id: `ozwald.${key}`,
-    title: g.title.replace(/^OzWALD\s+/i, ""),
-    category: "OzWALD" as const,
-    defaultW: W_HALF,
-    defaultH: H_ENV,
-    render: () => <EnvChartContent source="ozwald_daily" groupKey={key} />,
-  })),
-
-  ...Object.entries(OZWALD_8DAY_GROUPS).map(([key, g]) => ({
-    id: `ozwald_8day.${key}`,
-    title: g.title.replace(/^OzWALD\s+/i, ""),
-    category: "OzWALD" as const,
-    defaultW: W_HALF,
-    defaultH: H_ENV,
-    render: () => <EnvChartContent source="ozwald_8day" groupKey={key} />,
   })),
 
   { id: "info", title: "Info", category: "Info", defaultW: W_HALF, defaultH: H_INFO, render: () => <InfoContent /> },

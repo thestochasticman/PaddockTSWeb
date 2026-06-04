@@ -36,7 +36,9 @@ type PhenologyResponse = {
   paddock_id: string;
   year: number;
   variable: string;
-  observations: { doy: number; value: number }[];
+  // `observed` is false for gap-filled (interpolated) samples; absent on
+  // payloads from yearly zarrs written before the mask existed.
+  observations: { doy: number; value: number; observed?: boolean }[];
   metrics: PhenologyMetrics | null;
 };
 
@@ -170,14 +172,30 @@ export default function PaddockPanel({ stub, calendarReady, phenologyReady }: Pr
 
   const phenoTraces: any[] = [];
   if (phenology && phenology.observations.length > 0) {
-    phenoTraces.push({
-      x: phenology.observations.map((o) => o.doy),
-      y: phenology.observations.map((o) => o.value),
-      type: "scatter",
-      mode: "markers",
-      name: phenology.variable,
-      marker: { color: POS_COLOR, size: 7 },
-    });
+    // Filled circles for real observations; hollow circles for samples
+    // gap-filled by interpolation in the smoothed series.
+    const observedPts = phenology.observations.filter((o) => o.observed !== false);
+    const interpolatedPts = phenology.observations.filter((o) => o.observed === false);
+    if (observedPts.length > 0) {
+      phenoTraces.push({
+        x: observedPts.map((o) => o.doy),
+        y: observedPts.map((o) => o.value),
+        type: "scatter",
+        mode: "markers",
+        name: phenology.variable,
+        marker: { color: POS_COLOR, size: 7 },
+      });
+    }
+    if (interpolatedPts.length > 0) {
+      phenoTraces.push({
+        x: interpolatedPts.map((o) => o.doy),
+        y: interpolatedPts.map((o) => o.value),
+        type: "scatter",
+        mode: "markers",
+        name: `${phenology.variable} (interpolated)`,
+        marker: { color: POS_COLOR, size: 7, symbol: "circle-open" },
+      });
+    }
   }
 
   const phenoShapes: any[] = [];
@@ -231,6 +249,23 @@ export default function PaddockPanel({ stub, calendarReady, phenologyReady }: Pr
     </span>
   );
 
+  const dotLegendItem = (filled: boolean, label: string) => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+      <span
+        style={{
+          display: "inline-block",
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: filled ? POS_COLOR : "transparent",
+          border: `1.5px solid ${POS_COLOR}`,
+          boxSizing: "border-box",
+        }}
+      />
+      <span style={{ color: "var(--text-secondary)" }}>{label}</span>
+    </span>
+  );
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", height: "100%" }}>
       {/* shared controls */}
@@ -275,111 +310,109 @@ export default function PaddockPanel({ stub, calendarReady, phenologyReady }: Pr
           </select>
         </label>
         <span style={{ marginLeft: "auto", display: "inline-flex", gap: "0.85rem", fontSize: "0.75rem" }}>
+          {dotLegendItem(true, "observed")}
+          {dotLegendItem(false, "interpolated")}
           {legendItem(SOS_COLOR, "Start of Season")}
           {legendItem(POS_COLOR, "Peak of Season")}
           {legendItem(EOS_COLOR, "End of Season")}
         </span>
       </div>
 
-      {/* calendar + phenology stacked on the left, single hover side panel on the right */}
-      <div style={{ display: "flex", gap: "1rem", alignItems: "stretch", flex: 1, minHeight: 0 }}>
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-          {/* calendar block */}
-          {calendarReady && (
-            <div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(12, 1fr)",
-                  marginBottom: "0.35rem",
-                  fontSize: "0.75rem",
-                  color: "var(--text-primary)",
-                  fontFamily: "monospace",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                {MONTHS.map((m) => <div key={m}>{m}</div>)}
-              </div>
-              <div
-                onMouseLeave={() => setHoverIdx(null)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(48, 1fr)",
-                  gap: "1px",
-                  background: "var(--border)",
-                  padding: "1px",
-                }}
-              >
-                {Array.from({ length: 48 }).map((_, i) => {
-                  const t = calendar?.thumbnails[i];
-                  const active = hoverIdx === i;
-                  return (
-                    <div
-                      key={i}
-                      onMouseEnter={() => setHoverIdx(i)}
-                      style={{
-                        aspectRatio: "1",
-                        background: t ? `url(${t}) center/cover` : "var(--bg-panel)",
-                        outline: active ? "1px solid var(--text-secondary)" : "none",
-                        outlineOffset: "0px",
-                        cursor: "crosshair",
-                        imageRendering: "pixelated",
-                      }}
-                    />
-                  );
-                })}
-              </div>
-              {calendarLoading && (
-                <div style={{ marginTop: "0.4rem", fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "monospace" }}>
-                  loading thumbnails...
-                </div>
-              )}
+      {/* calendar across the full width */}
+      {calendarReady && (
+        <div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(12, 1fr)",
+              marginBottom: "0.35rem",
+              fontSize: "0.75rem",
+              color: "var(--text-primary)",
+              fontFamily: "monospace",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {MONTHS.map((m) => <div key={m}>{m}</div>)}
+          </div>
+          <div
+            onMouseLeave={() => setHoverIdx(null)}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(48, 1fr)",
+              gap: "1px",
+              background: "var(--border)",
+              padding: "1px",
+            }}
+          >
+            {Array.from({ length: 48 }).map((_, i) => {
+              const t = calendar?.thumbnails[i];
+              const active = hoverIdx === i;
+              return (
+                <div
+                  key={i}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  style={{
+                    aspectRatio: "1",
+                    background: t ? `url(${t}) center/cover` : "var(--bg-panel)",
+                    outline: active ? "1px solid var(--text-secondary)" : "none",
+                    outlineOffset: "0px",
+                    cursor: "crosshair",
+                    imageRendering: "pixelated",
+                  }}
+                />
+              );
+            })}
+          </div>
+          {calendarLoading && (
+            <div style={{ marginTop: "0.4rem", fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "monospace" }}>
+              loading thumbnails...
             </div>
           )}
+        </div>
+      )}
 
-          {/* phenology block (sits directly below the calendar) */}
-          <div style={{ flex: 1, minHeight: 0 }}>
-            {!phenologyReady && (
-              <Notice>waiting for paddock time series...</Notice>
-            )}
-            {phenologyReady && phenologyLoading && (
-              <Notice>computing phenology...</Notice>
-            )}
-            {phenologyReady && !phenologyLoading && phenologyError && (
-              <Notice>{phenologyError}</Notice>
-            )}
-            {phenologyReady && !phenologyLoading && !phenologyError && phenology && phenoTraces.length > 0 && (
-              <Plot
-                data={phenoTraces}
-                layout={phenoLayout}
-                config={{ responsive: true, displayModeBar: false }}
-                style={{ width: "100%", height: "100%", maxHeight: 320 }}
-                useResizeHandler
-              />
-            )}
-            {phenologyReady && !phenologyLoading && !phenologyError && phenology && phenoTraces.length === 0 && (
-              <Notice>no observations for this paddock × year</Notice>
-            )}
-            {phenologyReady && phenology && !metrics && !phenologyLoading && !phenologyError && (
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "monospace", marginTop: "0.3rem" }}>
-                phenology metrics unavailable (paddock had too few observations)
-              </div>
-            )}
-          </div>
+      {/* Below the calendar: phenology plot on the left, small hover preview on the right */}
+      <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
+          {!phenologyReady && (
+            <Notice>waiting for paddock time series...</Notice>
+          )}
+          {phenologyReady && phenologyLoading && (
+            <Notice>computing phenology...</Notice>
+          )}
+          {phenologyReady && !phenologyLoading && phenologyError && (
+            <Notice>{phenologyError}</Notice>
+          )}
+          {phenologyReady && !phenologyLoading && !phenologyError && phenology && phenoTraces.length > 0 && (
+            <Plot
+              data={phenoTraces}
+              layout={phenoLayout}
+              config={{ responsive: true, displayModeBar: false }}
+              style={{ width: "100%", height: "100%", maxHeight: 320 }}
+              useResizeHandler
+            />
+          )}
+          {phenologyReady && !phenologyLoading && !phenologyError && phenology && phenoTraces.length === 0 && (
+            <Notice>no observations for this paddock × year</Notice>
+          )}
+          {phenologyReady && phenology && !metrics && !phenologyLoading && !phenologyError && (
+            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "monospace", marginTop: "0.3rem" }}>
+              phenology metrics unavailable (paddock had too few observations)
+            </div>
+          )}
         </div>
 
-        {/* hover preview side panel: spans the full height of calendar + phenology */}
         <div
           style={{
-            width: 220,
+            width: 140,
             flexShrink: 0,
             border: "1px solid var(--border)",
             background: "var(--bg-panel)",
-            padding: "0.5rem",
+            padding: "0.4rem",
             display: "flex",
             flexDirection: "column",
-            gap: "0.4rem",
-            alignSelf: "stretch",
+            gap: "0.35rem",
+            alignSelf: "flex-start",
           }}
         >
           <div
@@ -406,18 +439,17 @@ export default function PaddockPanel({ stub, calendarReady, phenologyReady }: Pr
                 }}
               />
             ) : (
-              <div style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--text-secondary)", textAlign: "center", padding: "0.5rem" }}>
+              <div style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--text-secondary)", textAlign: "center", padding: "0.4rem" }}>
                 hover a cell
               </div>
             )}
           </div>
-          <div style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--text-primary)", lineHeight: 1.5 }}>
-            <div>date: {hoverDate ?? "—"}</div>
-            <div>
-              paddock: {selectedPaddock?.label ?? "—"}
+          <div style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--text-primary)", lineHeight: 1.4 }}>
+            <div>{hoverDate ?? "—"}</div>
+            <div style={{ color: "var(--text-secondary)" }}>
+              {selectedPaddock?.label ?? "—"}
               {selectedPaddock?.area_ha != null ? ` · ${selectedPaddock.area_ha.toFixed(1)} ha` : ""}
             </div>
-            <div>year: {year ?? "—"}</div>
           </div>
         </div>
       </div>

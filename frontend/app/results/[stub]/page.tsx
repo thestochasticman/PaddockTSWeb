@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BASE } from "../../components/api";
 import { useEnvironmentalData } from "../../components/charts/useEnvironmentalData";
-import { SILO_GROUPS, OZWALD_DAILY_GROUPS } from "../../components/charts/plotGroups";
+import { SILO_GROUPS } from "../../components/charts/plotGroups";
 import EnvSection from "../../components/charts/EnvSection";
 import CalendarPanel from "../../components/calendar/CalendarPanel";
 import PhenologyPanel from "../../components/phenology/PhenologyPanel";
@@ -24,8 +24,6 @@ type OutputStatus = {
   calendar_ready: boolean;
   phenology_plot_ready: boolean;
   silo_ready: boolean;
-  ozwald_daily_ready: boolean;
-  ozwald_8day_ready: boolean;
 };
 
 type VideoEntry = {
@@ -54,8 +52,6 @@ const EMPTY: OutputStatus = {
   calendar_ready: false,
   phenology_plot_ready: false,
   silo_ready: false,
-  ozwald_daily_ready: false,
-  ozwald_8day_ready: false,
 };
 
 const POLL_MS = 4000;
@@ -68,6 +64,7 @@ export default function ResultsPage() {
   const useWorkspace = searchParams.get("ui") !== "legacy";
 
   const [outputs, setOutputs] = useState<OutputStatus>(EMPTY);
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
   const [videoScale, setVideoScale] = useState(100);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -77,11 +74,10 @@ export default function ResultsPage() {
     outputs.vegfrac_video &&
     outputs.vegfrac_paddocks_video;
 
-  const envDone = outputs.silo_ready && outputs.ozwald_daily_ready;
+  const envDone = outputs.silo_ready;
   const allDone = videoDone && envDone;
 
   const silo = useEnvironmentalData(stub, "silo", outputs.silo_ready);
-  const ozwald = useEnvironmentalData(stub, "ozwald_daily", outputs.ozwald_daily_ready);
 
   useEffect(() => {
     if (!stub || useWorkspace) return;
@@ -90,17 +86,25 @@ export default function ResultsPage() {
       try {
         const res = await fetch(`${BASE}/status/${stub}`);
         if (!res.ok) return;
-        const data: OutputStatus = await res.json();
+        const raw = await res.json();
+        // Pick only the keys we display — the backend may report extra
+        // outputs (e.g. OzWALD) that the UI doesn't surface.
+        const data = Object.fromEntries(
+          Object.keys(EMPTY).map((k) => [k, !!raw[k]])
+        ) as OutputStatus;
         setOutputs(data);
+        setPipelineError(raw.pipeline_error ?? null);
 
         const vDone =
           data.sentinel2_video &&
           data.sentinel2_paddocks_video &&
           data.vegfrac_video &&
           data.vegfrac_paddocks_video;
-        const eDone = data.silo_ready && data.ozwald_daily_ready;
+        const eDone = data.silo_ready;
 
-        if (vDone && eDone) {
+        // Stop polling on completion or recorded failure — neither state
+        // changes until the user re-runs the query.
+        if ((vDone && eDone) || raw.pipeline_error) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
@@ -151,7 +155,21 @@ export default function ResultsPage() {
         </Link>
       </div>
 
-      {!allDone && (
+      {pipelineError && (
+        <div style={{
+          fontSize: "0.75rem",
+          color: "#e66",
+          background: "rgba(255,68,68,0.08)",
+          border: "1px solid var(--border)",
+          padding: "0.4rem 0.75rem",
+          marginBottom: "1rem",
+          fontFamily: "monospace",
+        }}>
+          ✗ pipeline failed: {pipelineError} — re-run the query to retry
+        </div>
+      )}
+
+      {!allDone && !pipelineError && (
         <div style={{
           fontSize: "0.7rem",
           color: "var(--text-secondary)",
@@ -255,15 +273,6 @@ export default function ResultsPage() {
         loading={silo.loading}
         error={silo.error}
         ready={outputs.silo_ready}
-      />
-
-      <EnvSection
-        title="OzWALD Daily Data"
-        groups={OZWALD_DAILY_GROUPS}
-        data={ozwald.data}
-        loading={ozwald.loading}
-        error={ozwald.error}
-        ready={outputs.ozwald_daily_ready}
       />
     </div>
   );

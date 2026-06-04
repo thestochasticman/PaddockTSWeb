@@ -15,19 +15,25 @@ type Props = {
 
 export default function QueryPanel({ onSelectArea }: Props) {
   const state = useQueryState();
-  const { handleRun, status, error, jobId, markDone } = useRunJob(
+  const { handleRun, status, error, jobId, markDone, markFailed } = useRunJob(
     state.selection,
     state.startDate,
     state.endDate,
     state.queryName
   );
-  const { outputs, allDone } = useJobStatus(
+  const { outputs, allDone, pipelineError } = useJobStatus(
     status === "polling" || status === "done" ? jobId : null
   );
 
   useEffect(() => {
     if (allDone && status === "polling") markDone();
   }, [allDone, status, markDone]);
+
+  useEffect(() => {
+    if (pipelineError && status === "polling") {
+      markFailed(`pipeline failed: ${pipelineError}`);
+    }
+  }, [pipelineError, status, markFailed]);
 
   const isSubmitting = status === "submitting";
 

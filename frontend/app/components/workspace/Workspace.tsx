@@ -20,9 +20,9 @@ const ROW_HEIGHT = 30;
 
 // ---------------- default layout ----------------
 
-// 4 videos stacked vertically on the left; rainfall, evapotranspiration,
-// soil moisture, and the combined paddock (calendar + phenology) block on
-// the right.
+// 4 videos stacked vertically on the left; temperature, rainfall,
+// evapotranspiration, and the combined paddock (calendar + phenology)
+// block on the right.
 const ROW_H = 14;
 const DEFAULT_LAYOUT: Layout[] = [
   { i: "video.sentinel2",                  x: 0, y: 0 * ROW_H, w: 5, h: ROW_H },
@@ -30,7 +30,7 @@ const DEFAULT_LAYOUT: Layout[] = [
   { i: "video.fractional_cover",           x: 0, y: 2 * ROW_H, w: 5, h: ROW_H },
   { i: "video.fractional_cover_paddocks",  x: 0, y: 3 * ROW_H, w: 5, h: ROW_H },
   { i: "silo.temperature",                 x: 5, y: 0 * ROW_H, w: 7, h: ROW_H },
-  { i: "rain_soil",                        x: 5, y: 1 * ROW_H, w: 7, h: ROW_H },
+  { i: "silo.rainfall",                    x: 5, y: 1 * ROW_H, w: 7, h: ROW_H },
   { i: "silo.evapotranspiration",          x: 5, y: 2 * ROW_H, w: 7, h: ROW_H },
   { i: "paddock",                          x: 5, y: 3 * ROW_H, w: 7, h: ROW_H },
 ];
@@ -145,10 +145,8 @@ function ActivityBar({
 // ---------------- root ----------------
 
 export default function Workspace({ stub }: Props) {
-  const { outputs } = useJobStatus(stub);
+  const { outputs, pipelineError } = useJobStatus(stub);
   const silo = useEnvironmentalData(stub, "silo", outputs.silo_ready);
-  const ozwald = useEnvironmentalData(stub, "ozwald_daily", outputs.ozwald_daily_ready);
-  const ozwald8day = useEnvironmentalData(stub, "ozwald_8day", outputs.ozwald_8day_ready);
 
   const [activePanel, setActivePanel] = useState<ActivityIconId | null>("outputs");
   const [layout, setLayout] = useState<Layout[]>(DEFAULT_LAYOUT);
@@ -166,7 +164,9 @@ export default function Workspace({ stub }: Props) {
       if (saved) {
         const parsed = JSON.parse(saved) as Layout[];
         if (Array.isArray(parsed) && parsed.every((p) => p && typeof p.i === "string")) {
-          setLayout(parsed);
+          // Drop panes that no longer exist in the catalogue (e.g. layouts
+          // saved before a pane was removed).
+          setLayout(parsed.filter((p) => findPane(p.i)));
         }
       }
     } catch {}
@@ -277,7 +277,7 @@ export default function Workspace({ stub }: Props) {
   const openIds = layout.map((l) => l.i);
 
   return (
-    <WorkspaceProvider value={{ stub, outputs, silo, ozwald, ozwald8day, paneResetKey }}>
+    <WorkspaceProvider value={{ stub, outputs, silo, paneResetKey }}>
       <div
         style={{
           width: "100%",
@@ -295,6 +295,22 @@ export default function Workspace({ stub }: Props) {
             </span>
           }
         />
+
+        {pipelineError && (
+          <div
+            style={{
+              padding: "0.4rem 1rem",
+              borderBottom: "1px solid var(--border)",
+              background: "rgba(255,68,68,0.08)",
+              color: "#e66",
+              fontFamily: "monospace",
+              fontSize: "0.75rem",
+              flexShrink: 0,
+            }}
+          >
+            ✗ pipeline failed: {pipelineError} — re-run the query to retry
+          </div>
+        )}
 
         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
           <ActivityBar

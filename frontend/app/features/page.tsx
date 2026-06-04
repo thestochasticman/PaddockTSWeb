@@ -127,24 +127,6 @@ export default function FeaturesPage() {
             Daily temperature, rainfall, solar radiation,
             evapotranspiration, and vapour pressure for the AOI centroid.
           </p>
-
-          <h3 style={H3}>OzWALD daily</h3>
-          <p style={P}>
-            Daily Tmax / Tmin, precipitation, wind, and downwelling
-            longwave radiation.
-          </p>
-
-          <h3 style={H3}>OzWALD 8-day</h3>
-          <p style={P}>
-            Soil moisture (Ssoil), NDVI / EVI, Leaf Area Index, and Gross
-            Primary Production at native 8-day cadence.
-          </p>
-
-          <h3 style={H3}>Combined plots</h3>
-          <p style={P}>
-            Rainfall + Soil Moisture share one chart with a dual y-axis;
-            click a legend entry to toggle either trace.
-          </p>
         </section>
 
         {/* --- Workspace UI --------------------------------------------- */}

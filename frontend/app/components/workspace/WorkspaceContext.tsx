@@ -14,8 +14,6 @@ export type WorkspaceContextValue = {
   stub: string;
   outputs: OutputStatus;
   silo: EnvFetchState;
-  ozwald: EnvFetchState;
-  ozwald8day: EnvFetchState;
   /** Monotonic counter; bumped whenever the user requests a plot-state
    *  reset (e.g. clicking the Outputs button in the activity bar). Plot
    *  panes useEffect on this to clear their local UI state. */

@@ -14,7 +14,6 @@ const CATEGORY_ORDER: PaneSpec["category"][] = [
   "Videos",
   "Interactive",
   "SILO",
-  "OzWALD",
   "Info",
 ];
 

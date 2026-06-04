@@ -10,6 +10,9 @@ services:
     environment:
       HOME: /tmp
       PYTHONUNBUFFERED: "1"
+      # Use ONLY the conda env's packages; never a host user-site (~/.local).
+      # Prevents "works on host, missing in container" dependency drift.
+      PYTHONNOUSERSITE: "1"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       HDF5_USE_FILE_LOCKING: "FALSE"
       GDAL_DATA: /opt/conda/envs/PaddockTSEnv/share/gdal

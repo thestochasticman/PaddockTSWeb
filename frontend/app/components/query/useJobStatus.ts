@@ -16,8 +16,6 @@ export type OutputStatus = {
   calendar_ready: boolean;
   phenology_plot_ready: boolean;
   silo_ready: boolean;
-  ozwald_daily_ready: boolean;
-  ozwald_8day_ready: boolean;
 };
 
 const EMPTY: OutputStatus = {
@@ -33,14 +31,16 @@ const EMPTY: OutputStatus = {
   calendar_ready: false,
   phenology_plot_ready: false,
   silo_ready: false,
-  ozwald_daily_ready: false,
-  ozwald_8day_ready: false,
 };
 
 const POLL_MS = 4000;
 
 export function useJobStatus(stub: string | null) {
   const [outputs, setOutputs] = useState<OutputStatus>(EMPTY);
+  // Set when the backend recorded a pipeline failure for this stub; kept
+  // separate from `outputs` so checklists that enumerate its keys are
+  // unaffected.
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const allDone =
@@ -57,17 +57,25 @@ export function useJobStatus(stub: string | null) {
 
     if (!stub) {
       setOutputs(EMPTY);
+      setPipelineError(null);
       return;
     }
 
     setOutputs(EMPTY);
+    setPipelineError(null);
 
     const poll = async () => {
       try {
         const res = await fetch(`${BASE}/status/${stub}`);
         if (!res.ok) return;
-        const data: OutputStatus = await res.json();
+        const raw = await res.json();
+        // Pick only the keys we display — the backend may report extra
+        // outputs (e.g. OzWALD) that the UI doesn't surface.
+        const data = Object.fromEntries(
+          Object.keys(EMPTY).map((k) => [k, !!raw[k]])
+        ) as OutputStatus;
         setOutputs(data);
+        setPipelineError(raw.pipeline_error ?? null);
 
         const done =
           data.sentinel2_video &&
@@ -75,7 +83,9 @@ export function useJobStatus(stub: string | null) {
           data.vegfrac_video &&
           data.vegfrac_paddocks_video;
 
-        if (done && intervalRef.current) {
+        // Stop polling on completion or recorded failure — neither state
+        // changes until the user re-runs the query.
+        if ((done || raw.pipeline_error) && intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
@@ -95,5 +105,5 @@ export function useJobStatus(stub: string | null) {
     };
   }, [stub]);
 
-  return { outputs, polling: !!stub && !allDone, allDone };
+  return { outputs, polling: !!stub && !allDone, allDone, pipelineError };
 }

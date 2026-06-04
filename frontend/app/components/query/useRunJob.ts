@@ -57,5 +57,12 @@ export function useRunJob(
 
   const markDone = useCallback(() => setStatus("done"), []);
 
-  return { handleRun, status, error, jobId, markDone };
+  // Backend recorded a pipeline failure for this job — surface it and
+  // re-enable the Run button so the user can retry.
+  const markFailed = useCallback((message: string) => {
+    setError(message);
+    setStatus("error");
+  }, []);
+
+  return { handleRun, status, error, jobId, markDone, markFailed };
 }

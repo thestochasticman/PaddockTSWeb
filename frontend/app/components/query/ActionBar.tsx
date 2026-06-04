@@ -13,7 +13,6 @@ const OUTPUT_LABELS: [keyof OutputStatus, string][] = [
   ["vegfrac_video", "Veg. Fraction Video"],
   ["vegfrac_paddocks_video", "Veg. Fraction + Paddocks Video"],
   ["silo_ready", "SILO Climate Data"],
-  ["ozwald_daily_ready", "OzWALD Daily Data"],
 ];
 
 type Props = {

@@ -80,10 +80,25 @@ def run_environmental(query: Query):
         download_ozwald_daily(query)
     except Exception:
         traceback.print_exc()
+
+
+def _pipeline_error_path(stub: str) -> str:
+    return f"{config.tmp_dir}/{stub}/pipeline_error.txt"
+
+
+def run_pipeline_task(query: Query):
+    """Run the pipeline; on failure persist the error so /status can report
+    it (a bare background task would swallow the exception — the job dies
+    silently and the frontend polls forever)."""
+    err_path = _pipeline_error_path(query.stub)
     try:
-        download_ozwald_8day(query)
-    except Exception:
+        run_pipeline(query)
+    except Exception as e:
         traceback.print_exc()
+        os.makedirs(os.path.dirname(err_path), exist_ok=True)
+        with open(err_path, "w") as f:
+            f.write(f"{type(e).__name__}: {e}")
+
 
 
 def _read_csv_as_json(path: str, date_col: str):
@@ -108,8 +123,12 @@ def run_job(req: RunRequest, background_tasks: BackgroundTasks):
         query = Query(**kwargs)
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
+    # A re-run resets any error state from a previous failed attempt.
+    err_path = _pipeline_error_path(query.stub)
+    if exists(err_path):
+        os.remove(err_path)
     threading.Thread(target=run_environmental, args=(query,), daemon=True).start()
-    background_tasks.add_task(run_pipeline, query)
+    background_tasks.add_task(run_pipeline_task, query)
     return {"stub": query.stub}
 
 
@@ -152,7 +171,14 @@ def get_status(stub: str):
     # default pipeline writes sam_paddocks.gpkg.
     paddocks_stem = "sam_paddocks"
 
+    err_path = _pipeline_error_path(stub)
+    pipeline_error = None
+    if exists(err_path):
+        with open(err_path) as f:
+            pipeline_error = f.read().strip() or "pipeline failed (no detail recorded)"
+
     return {
+        "pipeline_error": pipeline_error,
         "sentinel2_download": sentinel2_ready,
         "sentinel2_clean": sentinel2_clean_ready,
         "vegfrac_compute": vegfrac_ready,
