@@ -11,7 +11,7 @@ export default function HomePage() {
   const mapRef = useRef<ReactMapHandle>(null);
 
   return (
-    <APIProvider apiKey={apiKey} libraries={["drawing"]}>
+    <APIProvider apiKey={apiKey}>
       <div className="crt-root">
         <TopBar />
         <div className="crt-main">
