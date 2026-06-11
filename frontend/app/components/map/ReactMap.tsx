@@ -1,30 +1,16 @@
 "use client";
 
-import { forwardRef, useImperativeHandle } from "react";
 import { Map } from "@vis.gl/react-google-maps";
 import { useDrawingManager } from "./useDrawingManager";
 
-export type ReactMapHandle = {
-  enableRectangleSelection: () => void;
-};
-
-// Must be a child of <Map> so useMap() works
-const DrawingLayer = forwardRef<ReactMapHandle>(function DrawingLayer(
-  _props,
-  ref
-) {
-  const { enableRectangleSelection } = useDrawingManager();
-
-  useImperativeHandle(
-    ref,
-    () => ({ enableRectangleSelection }),
-    [enableRectangleSelection]
-  );
-
+// Must be a child of <Map> so useMap() works. Drawing is triggered through
+// mapStore.requestDraw() (see useDrawingManager), so no ref plumbing is needed.
+function DrawingLayer() {
+  useDrawingManager();
   return null;
-});
+}
 
-const ReactMap = forwardRef<ReactMapHandle>(function ReactMap(_props, ref) {
+export default function ReactMap() {
   return (
     <Map
       defaultCenter={{ lat: -33.5, lng: 148.5 }}
@@ -36,9 +22,7 @@ const ReactMap = forwardRef<ReactMapHandle>(function ReactMap(_props, ref) {
       mapTypeControl
       zoomControl
     >
-      <DrawingLayer ref={ref} />
+      <DrawingLayer />
     </Map>
   );
-});
-
-export default ReactMap;
+}

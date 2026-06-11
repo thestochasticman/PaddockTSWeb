@@ -57,6 +57,13 @@ export function useRunJob(
 
   const markDone = useCallback(() => setStatus("done"), []);
 
+  // Return the bar to idle after the caller has navigated to the results page
+  // (which owns progress display from there on).
+  const reset = useCallback(() => {
+    setStatus("idle");
+    setError(null);
+  }, []);
+
   // Backend recorded a pipeline failure for this job — surface it and
   // re-enable the Run button so the user can retry.
   const markFailed = useCallback((message: string) => {
@@ -64,5 +71,5 @@ export function useRunJob(
     setStatus("error");
   }, []);
 
-  return { handleRun, status, error, jobId, markDone, markFailed };
+  return { handleRun, status, error, jobId, markDone, markFailed, reset };
 }

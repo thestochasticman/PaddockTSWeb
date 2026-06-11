@@ -20,26 +20,23 @@ export default function DateRangeSection({
   onTogglePicker,
 }: Props) {
   return (
-    <div>
-      <label className="crt-label">Time Window</label>
-      <div className="grid grid-cols-2 gap-3 mt-1">
-        <MiniDatePicker
-          label="Start"
-          value={startDate}
-          onChange={onStartChange}
-          isOpen={openPicker === "start"}
-          onToggle={() => onTogglePicker("start")}
-          align="left"
-        />
-        <MiniDatePicker
-          label="End"
-          value={endDate}
-          onChange={onEndChange}
-          isOpen={openPicker === "end"}
-          onToggle={() => onTogglePicker("end")}
-          align="right"
-        />
-      </div>
+    <div className="grid grid-cols-2 gap-3">
+      <MiniDatePicker
+        label="Start"
+        value={startDate}
+        onChange={onStartChange}
+        isOpen={openPicker === "start"}
+        onToggle={() => onTogglePicker("start")}
+        align="left"
+      />
+      <MiniDatePicker
+        label="End"
+        value={endDate}
+        onChange={onEndChange}
+        isOpen={openPicker === "end"}
+        onToggle={() => onTogglePicker("end")}
+        align="right"
+      />
     </div>
   );
 }

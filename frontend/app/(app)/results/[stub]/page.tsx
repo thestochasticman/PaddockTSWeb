@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BASE } from "../../components/api";
-import { useEnvironmentalData } from "../../components/charts/useEnvironmentalData";
-import { SILO_GROUPS } from "../../components/charts/plotGroups";
-import EnvSection from "../../components/charts/EnvSection";
-import CalendarPanel from "../../components/calendar/CalendarPanel";
-import PhenologyPanel from "../../components/phenology/PhenologyPanel";
-import Workspace from "../../components/workspace/Workspace";
+import { BASE } from "../../../components/api";
+import { useEnvironmentalData } from "../../../components/charts/useEnvironmentalData";
+import { SILO_GROUPS } from "../../../components/charts/plotGroups";
+import EnvSection from "../../../components/charts/EnvSection";
+import CalendarPanel from "../../../components/calendar/CalendarPanel";
+import PhenologyPanel from "../../../components/phenology/PhenologyPanel";
+import Workspace from "../../../components/workspace/Workspace";
 
 type OutputStatus = {
   sentinel2_download: boolean;

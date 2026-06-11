@@ -11,7 +11,6 @@ import { useEnvironmentalData } from "../charts/useEnvironmentalData";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import { PANES, PaneCard, findPane } from "./panes";
 import Sidebar from "./Sidebar";
-import TopBar from "../ui/TopBar";
 
 type Props = { stub: string };
 
@@ -83,6 +82,10 @@ function ActivityBar({
         alignItems: "center",
         padding: "0.25rem 0",
         flexShrink: 0,
+        // Inter (latin subset) lacks the geometric icon glyphs (▦, ↺) and
+        // renders them as tofu/"?". Monospace resolves to a glyph-complete
+        // fallback (e.g. DejaVu), matching how the sidebar renders ▸/▾.
+        fontFamily: "monospace",
       }}
     >
       {btn("outputs", "Outputs", "▦")}
@@ -272,30 +275,20 @@ export default function Workspace({ stub }: Props) {
       })()
     : undefined;
 
-  const readyCount = Object.values(outputs).filter(Boolean).length;
-  const totalCount = Object.keys(outputs).length;
   const openIds = layout.map((l) => l.i);
 
   return (
     <WorkspaceProvider value={{ stub, outputs, silo, paneResetKey }}>
       <div
         style={{
-          width: "100%",
+          flex: 1,
+          minWidth: 0,
+          minHeight: 0,
           background: "var(--bg)",
           display: "flex",
           flexDirection: "column",
-          minHeight: "100vh",
         }}
       >
-        <TopBar
-          center={stub}
-          right={
-            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "monospace" }}>
-              {readyCount}/{totalCount} outputs ready
-            </span>
-          }
-        />
-
         {pipelineError && (
           <div
             style={{
@@ -340,7 +333,7 @@ export default function Workspace({ stub }: Props) {
               />
             </div>
           )}
-          <div ref={gridContainerRef} style={{ flex: 1, minWidth: 0, padding: "0.5rem" }}>
+          <div ref={gridContainerRef} style={{ flex: 1, minWidth: 0, padding: "0.5rem", overflowY: "auto" }}>
             <GridLayout
               layout={layout}
               cols={COLS}

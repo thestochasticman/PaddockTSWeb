@@ -77,11 +77,74 @@ body {
   }
 
   .crt-main {
-    @apply flex flex-1 min-h-0;
+    @apply flex flex-1 min-h-0 overflow-y-auto;
   }
 
   .crt-map-container {
     @apply flex-1 min-h-0 min-w-0 relative overflow-hidden;
+  }
+
+  /* Horizontal query strip (shared across map + results views).
+     3-zone grid: logo (left) | input group (centered) | nav (right). The
+     equal 1fr side tracks keep the input group centred in the bar. */
+  .crt-querybar {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, auto) 1fr;
+    align-items: flex-end;
+    gap: 0.6rem 1rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .crt-querybar-center {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.6rem 1rem;
+  }
+
+  .crt-querybar-cell {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+  }
+
+  /* Centre each box's label over its control (incl. the Start/End date
+     labels), instead of the default left alignment. */
+  .crt-querybar .crt-label { text-align: center; }
+
+  .crt-querybar .crt-select { min-width: 150px; }
+
+  .crt-querybar-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .crt-querybar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-self: end;
+    align-self: center;
+  }
+
+  .crt-querybar-features {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.75rem;
+  }
+  .crt-querybar-features:hover { border-color: var(--border-focus); }
+
+  .crt-querybar-error {
+    grid-column: 1 / -1;
+    color: var(--red);
   }
 
   /* Toggle */
@@ -310,5 +373,36 @@ body {
     background: #fff;
     color: #000;
   }
+
+  /* Query combobox (saved-query list popup) */
+  .crt-combo-popup {
+    width: 200px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 0.25rem;
+  }
+  .crt-combo-item { @apply flex items-center; }
+  .crt-combo-item--active { background: rgba(255, 255, 255, 0.06); }
+  .crt-combo-item-name {
+    flex: 1;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.4rem;
+    cursor: pointer;
+  }
+  .crt-combo-item-name:hover { color: var(--text-primary); }
+  .crt-combo-item-del {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.85rem;
+  }
+  .crt-combo-item-del:hover { color: var(--red); }
 
 }

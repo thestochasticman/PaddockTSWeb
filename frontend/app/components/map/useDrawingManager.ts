@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useMap } from "@vis.gl/react-google-maps";
-import { getBBox, setBBox, subscribe } from "./mapStore";
+import { getBBox, setBBox, subscribe, subscribeDraw } from "./mapStore";
 import type { Selection } from "../types";
 
 const RECT_STYLE = {
@@ -215,6 +215,13 @@ export function useDrawingManager() {
       () => document.removeEventListener("mouseup", onDocUp),
     ];
   }, [map, attachRectListeners, clearDrawListeners]);
+
+  // Let the (persistent) query bar trigger drawing via mapStore, replaying any
+  // request that was latched while no map was mounted.
+  useEffect(() => {
+    if (!map) return;
+    return subscribeDraw(() => enableRectangleSelection());
+  }, [map, enableRectangleSelection]);
 
   return { enableRectangleSelection };
 }
