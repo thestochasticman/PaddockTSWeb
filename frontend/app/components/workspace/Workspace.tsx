@@ -11,6 +11,12 @@ import { useEnvironmentalData } from "../charts/useEnvironmentalData";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import { PANES, PaneCard, findPane } from "./panes";
 import Sidebar from "./Sidebar";
+import {
+  getPresets,
+  savePreset,
+  deletePreset,
+  type LayoutPresets,
+} from "./layoutPresets";
 
 type Props = { stub: string };
 
@@ -156,6 +162,8 @@ export default function Workspace({ stub }: Props) {
   const [containerWidth, setContainerWidth] = useState<number>(1200);
   const [draggingSpecId, setDraggingSpecId] = useState<string | null>(null);
   const [paneResetKey, setPaneResetKey] = useState<number>(0);
+  const [presets, setPresets] = useState<LayoutPresets>({});
+  const [activePreset, setActivePreset] = useState<string>("");
   const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const layoutKey = `workspace-grid:${stub}`;
@@ -238,6 +246,33 @@ export default function Workspace({ stub }: Props) {
       window.localStorage.removeItem(layoutKey);
     } catch {}
     setLayout(DEFAULT_LAYOUT);
+    setActivePreset("");
+  };
+
+  // Named, cross-query layout presets (browser-side).
+  useEffect(() => {
+    setPresets(getPresets());
+  }, []);
+
+  // Applying a preset makes it this stub's working layout too. Drop any panes
+  // that no longer exist in the catalogue.
+  const applyPreset = (name: string) => {
+    setActivePreset(name);
+    const preset = presets[name];
+    if (preset) handleLayoutChange(preset.filter((p) => findPane(p.i)));
+  };
+
+  const handleSavePreset = () => {
+    const name = window.prompt("Save current layout as:", activePreset || "")?.trim();
+    if (!name) return;
+    setPresets(savePreset(name, layout));
+    setActivePreset(name);
+  };
+
+  const handleDeletePreset = () => {
+    if (!activePreset) return;
+    setPresets(deletePreset(activePreset));
+    setActivePreset("");
   };
 
   // Drop-from-sidebar handler. RGL's onDrop fires with the layout (already
@@ -333,7 +368,57 @@ export default function Workspace({ stub }: Props) {
               />
             </div>
           )}
-          <div ref={gridContainerRef} style={{ flex: 1, minWidth: 0, padding: "0.5rem", overflowY: "auto" }}>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.4rem 0.6rem",
+                borderBottom: "1px solid var(--border)",
+                fontFamily: "monospace",
+                fontSize: "0.7rem",
+                color: "var(--text-secondary)",
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Layout
+              </span>
+              <select
+                className="crt-select"
+                style={{ fontSize: "0.7rem" }}
+                value={activePreset}
+                onChange={(e) => applyPreset(e.target.value)}
+                title="Apply a saved layout"
+              >
+                <option value="">—</option>
+                {Object.keys(presets).map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="crt-btn-ghost"
+                style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}
+                onClick={handleSavePreset}
+              >
+                Save as…
+              </button>
+              {activePreset && (
+                <button
+                  type="button"
+                  className="crt-btn-danger"
+                  onClick={handleDeletePreset}
+                  title={`Delete "${activePreset}"`}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+            <div ref={gridContainerRef} style={{ flex: 1, minWidth: 0, padding: "0.5rem", overflowY: "auto" }}>
             <GridLayout
               layout={layout}
               cols={COLS}
@@ -361,6 +446,7 @@ export default function Workspace({ stub }: Props) {
                 </div>
               ))}
             </GridLayout>
+            </div>
           </div>
         </div>
 
